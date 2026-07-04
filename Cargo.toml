@@ -1,0 +1,11 @@
+[package]
+name = "matcraft"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "CLI-генератор русских матерных выражений по морфологическим правилам"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4.6", features = ["derive"] }
+rand = "0.9"

@@ -1,0 +1,8 @@
+.ai-dev/state/
+.ai-dev/feedback/
+.ai-dev/worktrees/
+.ai-dev/config.local.json
+.ai-dev/model-routes.local.json
+
+# Rust build artifacts
+/target/

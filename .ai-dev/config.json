@@ -1,0 +1,22 @@
+{
+  "mode": "interactive",
+  "profile": "full",
+  "platform": "claude",
+  "kind": "mixed",
+  "docLanguage": "ru",
+  "roles": {
+    "orchestrator": {
+      "agent": "ai-dev"
+    },
+    "planner": {
+      "agent": "dev-planner"
+    },
+    "builder": {
+      "agent": "dev-builder"
+    },
+    "reviewer": {
+      "agent": "dev-reviewer",
+      "model": "auto"
+    }
+  }
+}

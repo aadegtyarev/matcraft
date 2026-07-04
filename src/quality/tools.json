@@ -1,0 +1,20 @@
+[
+  {
+    "what": "Build all targets (check compilation)",
+    "command": "cargo build --all-targets",
+    "beat": "build",
+    "init": ""
+  },
+  {
+    "what": "Clippy lint checks with deny warnings",
+    "command": "cargo clippy -- -D warnings",
+    "beat": "build",
+    "init": ""
+  },
+  {
+    "what": "Run all tests",
+    "command": "cargo test",
+    "beat": "build",
+    "init": ""
+  }
+]
