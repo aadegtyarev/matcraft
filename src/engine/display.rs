@@ -1,6 +1,6 @@
 //! Output formatting for the paradigm explorer and root list.
 
-use crate::engine::morpheme::{Attestation, ParadigmResult, suffix_gloss, suffix_display};
+use crate::engine::morpheme::{Attestation, ParadigmResult, suffix_display, suffix_gloss};
 use crate::engine::paradigm::list_roots;
 
 /// Format an explore result as a human-readable table.
@@ -89,7 +89,11 @@ pub fn format_explore(result: &ParadigmResult) -> String {
     for (suffix_val_str, group) in &groups {
         // Section header — only infinitive-ending forms in the main table
         let gloss = suffix_gloss(get_suffix_index(suffix_val_str));
-        let section_title = format!("═══ Суффикс {} ({}) ═══", suffix_display(get_suffix_index(suffix_val_str)), gloss);
+        let section_title = format!(
+            "═══ Суффикс {} ({}) ═══",
+            suffix_display(get_suffix_index(suffix_val_str)),
+            gloss
+        );
         out.push_str(&section_title);
         out.push_str("\n\n");
 
@@ -107,7 +111,13 @@ pub fn format_explore(result: &ParadigmResult) -> String {
             let att_str = format_attestation(vf.attestation);
             let note_str = vf.note.unwrap_or("—");
 
-            count_attestation(&mut common, &mut rare, &mut possible, &mut impossible, vf.attestation);
+            count_attestation(
+                &mut common,
+                &mut rare,
+                &mut possible,
+                &mut impossible,
+                vf.attestation,
+            );
 
             // Pad columns
             out.push_str(&format!(
@@ -144,11 +154,20 @@ pub fn format_list_roots() -> String {
     out.push_str(&format!("Доступные корни ({}):\n", roots.len()));
     for root_name in &roots {
         let rd = crate::engine::morpheme::root_data(root_name);
-        let gloss_str = rd.and_then(|r| r.gloss).map(|g| format!("'{}'", g)).unwrap_or_default();
+        let gloss_str = rd
+            .and_then(|r| r.gloss)
+            .map(|g| format!("'{}'", g))
+            .unwrap_or_default();
         out.push_str(&format!("  {}-   {}\n", root_name, gloss_str));
     }
     out.push('\n');
-    let root_form = if roots.len() == 1 { "корень" } else if roots.len() < 5 { "корня" } else { "корней" };
+    let root_form = if roots.len() == 1 {
+        "корень"
+    } else if roots.len() < 5 {
+        "корня"
+    } else {
+        "корней"
+    };
     out.push_str(&format!("  Всего: {} {}\n", roots.len(), root_form));
     out.push_str("  Команда: matcraft explore <корень> для полной парадигмы\n");
 
@@ -206,20 +225,29 @@ mod tests {
         let result = explore("еб", None).expect("еб should be valid");
         let output = format_explore(&result);
         assert!(output.contains("еб-"), "Output should contain root name");
-        assert!(output.contains("common"), "Output should contain attestation labels");
+        assert!(
+            output.contains("common"),
+            "Output should contain attestation labels"
+        );
     }
 
     #[test]
     fn test_format_explore_contains_suffix_sections() {
         let result = explore("еб", None).expect("еб should be valid");
         let output = format_explore(&result);
-        assert!(output.contains("Суффикс"), "Output should contain suffix sections");
+        assert!(
+            output.contains("Суффикс"),
+            "Output should contain suffix sections"
+        );
     }
 
     #[test]
     fn test_format_list_roots_contains_eb() {
         let output = format_list_roots();
         assert!(output.contains("еб"), "Output should contain еб root");
-        assert!(output.contains("корень"), "Output should contain root count in Russian");
+        assert!(
+            output.contains("корень"),
+            "Output should contain root count in Russian"
+        );
     }
 }

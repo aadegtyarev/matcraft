@@ -41,7 +41,7 @@ fn combine_suffix_ending(suffix: &str, ending: &str) -> &'static str {
 ///
 /// # Example
 ///
-/// ```
+/// ```text
 /// build_form("вы", "еб", "а", "ть") → "выебать"
 /// build_form("от", "еб", "а", "ть") → "отъебать"
 /// build_form("ис", "еб", "ну", "ть") → "исебнуть"
@@ -82,7 +82,10 @@ fn needs_hard_sign(prefix: &str, root: &str) -> bool {
     // Prefixes that trigger ъ-insertion in standard Russian orthography.
     // As new prefixes are added, they should be listed here (notably includes
     // от-, раз-, вз-, в-, с-, под-, над-, пред-, об-).
-    if !matches!(prefix, "от" | "раз" | "вз" | "в" | "с" | "под" | "над" | "пред" | "об") {
+    if !matches!(
+        prefix,
+        "от" | "раз" | "вз" | "в" | "с" | "под" | "над" | "пред" | "об"
+    ) {
         return false;
     }
     let first_r = root.chars().next();
