@@ -9,9 +9,9 @@ use rand::seq::SliceRandom;
 
 use crate::engine::grammar::build_form;
 use crate::engine::morpheme::{
-    all_roots, ending_val, endings_for_suffix, lookup_attestation,
-    prefix_allomorphs, prefix_count, prefix_display, prefix_val, root_data, select_prefix_allomorph,
-    suffix_display, suffix_val, Attestation, ExploreError, ParadigmResult, VerbForm,
+    Attestation, ExploreError, ParadigmResult, VerbForm, all_roots, ending_val, endings_for_suffix,
+    lookup_attestation, prefix_allomorphs, prefix_count, prefix_display, prefix_val, root_data,
+    select_prefix_allomorph, suffix_display, suffix_val,
 };
 
 /// Explore the full paradigm for a given root.
@@ -22,7 +22,10 @@ use crate::engine::morpheme::{
 ///
 /// Unlisted combinations default to `Attestation::Possible` — linguistically
 /// honest: unattested ≠ impossible.
-pub fn explore(root_name: &str, suffix_filter: Option<&str>) -> Result<ParadigmResult, ExploreError> {
+pub fn explore(
+    root_name: &str,
+    suffix_filter: Option<&str>,
+) -> Result<ParadigmResult, ExploreError> {
     let rd = root_data(root_name).ok_or_else(|| {
         let available: Vec<&str> = all_roots().iter().map(|r| r.name).collect();
         ExploreError::RootNotFound {
@@ -212,7 +215,11 @@ mod tests {
         for form in &forms {
             assert!(!form.is_empty(), "Generated form should not be empty");
             // Every form should contain "еб"
-            assert!(form.contains("еб"), "Form '{}' should contain root 'еб'", form);
+            assert!(
+                form.contains("еб"),
+                "Form '{}' should contain root 'еб'",
+                form
+            );
         }
     }
 
@@ -241,10 +248,25 @@ mod tests {
 
         // Check specific known forms exist
         assert!(forms.contains(&"ебать"), "ебать should be in the paradigm");
-        assert!(forms.contains(&"выебать"), "выебать should be in the paradigm");
-        assert!(forms.contains(&"заебать"), "заебать should be in the paradigm");
-        assert!(forms.contains(&"отъебать"), "отъебать should be in the paradigm");
-        assert!(forms.contains(&"исебать"), "исебать should be in the paradigm");
-        assert!(forms.contains(&"ебнуть"), "ебнуть should be in the paradigm");
+        assert!(
+            forms.contains(&"выебать"),
+            "выебать should be in the paradigm"
+        );
+        assert!(
+            forms.contains(&"заебать"),
+            "заебать should be in the paradigm"
+        );
+        assert!(
+            forms.contains(&"отъебать"),
+            "отъебать should be in the paradigm"
+        );
+        assert!(
+            forms.contains(&"исебать"),
+            "исебать should be in the paradigm"
+        );
+        assert!(
+            forms.contains(&"ебнуть"),
+            "ебнуть should be in the paradigm"
+        );
     }
 }

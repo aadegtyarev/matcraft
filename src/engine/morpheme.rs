@@ -221,13 +221,25 @@ struct EndingEntry {
 /// Endings for the walking skeleton.
 const ENDINGS: &[EndingEntry] = &[
     // 0: infinitive
-    EndingEntry { val: "ть", applicable_to: &[0, 1] },
+    EndingEntry {
+        val: "ть",
+        applicable_to: &[0, 1],
+    },
     // 1: past masculine singular
-    EndingEntry { val: "л", applicable_to: &[0, 1] },
+    EndingEntry {
+        val: "л",
+        applicable_to: &[0, 1],
+    },
     // 2: present 3sg
-    EndingEntry { val: "ёт", applicable_to: &[0] },
+    EndingEntry {
+        val: "ёт",
+        applicable_to: &[0],
+    },
     // 3: present 3sg (-нёт for -ну-)
-    EndingEntry { val: "нёт", applicable_to: &[1] },
+    EndingEntry {
+        val: "нёт",
+        applicable_to: &[1],
+    },
 ];
 
 pub fn ending_val(idx: usize) -> &'static str {
@@ -312,9 +324,13 @@ const ROOT_EB_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
 
 /// Lookup attestation and note for a given root, prefix index, and suffix index.
 ///
-/// Returns (Attestation, Option<note>). Unlisted combinations default to
+/// Returns `(Attestation, Option<note>)`. Unlisted combinations default to
 /// (Possible, None) — linguistically honest: unattested ≠ impossible.
-pub fn lookup_attestation(root: &str, prefix_idx: usize, suffix_idx: usize) -> (Attestation, Option<&'static str>) {
+pub fn lookup_attestation(
+    root: &str,
+    prefix_idx: usize,
+    suffix_idx: usize,
+) -> (Attestation, Option<&'static str>) {
     match root {
         "еб" => ROOT_EB_ATTEST
             .iter()
@@ -335,7 +351,11 @@ pub fn lookup_attestation(root: &str, prefix_idx: usize, suffix_idx: usize) -> (
 /// - из-/ис-: use "ис" before voiceless consonants and before root "еб" (colloquial form);
 ///   otherwise use "из".
 /// - All other prefixes: return the primary form (ъ-insertion is handled in build_stem).
-pub fn select_prefix_allomorph<'a>(prefix_val: &'a str, allomorphs: &[&str], root: &str) -> &'a str {
+pub fn select_prefix_allomorph<'a>(
+    prefix_val: &'a str,
+    allomorphs: &[&str],
+    root: &str,
+) -> &'a str {
     if allomorphs.is_empty() {
         return prefix_val;
     }
@@ -344,7 +364,10 @@ pub fn select_prefix_allomorph<'a>(prefix_val: &'a str, allomorphs: &[&str], roo
             let first = root.chars().next().unwrap_or(' ');
             // Before root еб-, colloquial usage prefers ис-
             // Also before any voiceless consonant.
-            if matches!(first, 'е' | 'ё' | 'п' | 'с' | 'т' | 'к' | 'х' | 'ц' | 'ч' | 'ш' | 'щ') {
+            if matches!(
+                first,
+                'е' | 'ё' | 'п' | 'с' | 'т' | 'к' | 'х' | 'ц' | 'ч' | 'ш' | 'щ'
+            ) {
                 "ис"
             } else {
                 "из"

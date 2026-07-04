@@ -1,5 +1,11 @@
 [
   {
+    "what": "Check code formatting (rustfmt)",
+    "command": "cargo fmt -- --check",
+    "beat": "build",
+    "init": "rustup component add rustfmt"
+  },
+  {
     "what": "Build all targets (check compilation)",
     "command": "cargo build --all-targets",
     "beat": "build",
@@ -9,12 +15,24 @@
     "what": "Clippy lint checks with deny warnings",
     "command": "cargo clippy -- -D warnings",
     "beat": "build",
-    "init": ""
+    "init": "rustup component add clippy"
   },
   {
     "what": "Run all tests",
     "command": "cargo test",
     "beat": "build",
     "init": ""
+  },
+  {
+    "what": "Check documentation builds without warnings",
+    "command": "cargo doc --no-deps --document-private-items",
+    "beat": "build",
+    "init": ""
+  },
+  {
+    "what": "Security audit of dependencies (known vulnerabilities)",
+    "command": "cargo audit",
+    "beat": "build",
+    "init": "cargo install cargo-audit"
   }
 ]
