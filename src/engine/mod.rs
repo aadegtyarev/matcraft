@@ -1,4 +1,6 @@
-pub mod morphemes;
-pub mod generator;
+pub mod morpheme;
+pub mod grammar;
+pub mod paradigm;
+pub mod display;
 
-pub use generator::generate;
+pub use paradigm::{explore, generate};
