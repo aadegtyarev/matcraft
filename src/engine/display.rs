@@ -36,13 +36,21 @@ pub fn format_explore(result: &ParadigmResult) -> String {
         result.root_productivity
     ));
 
-    // Handle roots with no verb forms (noun-only roots, or empty suffix_indices)
+    // No verb forms. Two distinct cases, distinguished by whether the root is
+    // *truly* noun-only (no suffix classes at all) or verbal but the `--suffix`
+    // filter matched nothing. Conflating them would print a FALSE "noun-only"
+    // label for a verbal root under a non-matching filter.
     if result.forms.is_empty() {
-        out.push_str("  Глагольная парадигма отсутствует, чисто именной корень.\n");
-        out.push_str("  Именная деривация в текущей версии движка не реализована.\n");
         let rd = all_roots().iter().find(|r| r.name == result.root_name);
-        if let Some(rd) = rd {
-            out.push_str(&format!("  Заметка: {}\n", rd.linguistic_note));
+        let is_noun_only = rd.map(|r| r.suffix_indices.is_empty()).unwrap_or(true);
+        if is_noun_only {
+            out.push_str("  Глагольная парадигма отсутствует, чисто именной корень.\n");
+            out.push_str("  Именная деривация в текущей версии движка не реализована.\n");
+            if let Some(rd) = rd {
+                out.push_str(&format!("  Заметка: {}\n", rd.linguistic_note));
+            }
+        } else {
+            out.push_str("  Нет форм по заданному фильтру.\n");
         }
         return out;
     }
@@ -481,6 +489,26 @@ mod tests {
         assert!(
             !output.contains("v0.5"),
             "Noun-only message must be version-neutral"
+        );
+    }
+
+    #[test]
+    fn test_format_explore_verbal_root_empty_filter_not_noun_only() {
+        // A verbal root under a non-matching `--suffix` filter yields empty forms
+        // but must NOT be mislabelled noun-only (honesty: the label would be false).
+        let result = explore("еб", Some("бред")).expect("еб should be valid");
+        assert!(
+            result.forms.is_empty(),
+            "non-matching filter should yield no forms"
+        );
+        let output = format_explore(&result);
+        assert!(
+            output.contains("Нет форм по заданному фильтру"),
+            "verbal root + non-matching filter should show the filter message"
+        );
+        assert!(
+            !output.contains("именной корень"),
+            "verbal root must not be labelled noun-only"
         );
     }
 

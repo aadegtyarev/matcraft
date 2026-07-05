@@ -205,6 +205,79 @@ fn generate_root_count_three() {
     );
 }
 
+/// B5 (#22): a valid noun-only root has no verbal pool — informative message on
+/// stdout, exit 0 (valid input, not an error).
+#[test]
+fn generate_noun_only_root_reports_message_and_exits_zero() {
+    matcraft()
+        .args(["generate", "--root", "манд"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("именной корень"))
+        .stdout(predicate::str::contains("глагольных форм нет"));
+}
+
+/// B6 (#22 regression): a valid verb root still emits forms and never the
+/// noun-only message — guards against the noun-only branch swallowing verb roots.
+#[test]
+fn generate_verb_root_still_produces_forms() {
+    let out = matcraft()
+        .args(["generate", "--root", "еб"])
+        .output()
+        .expect("command should run");
+    assert!(out.status.success(), "verb root generate must succeed");
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    assert!(
+        !stdout.contains("глагольных форм нет"),
+        "verb root must not report the noun-only message"
+    );
+    assert!(
+        stdout.trim().contains("еб"),
+        "generated verb-root form should contain the root 'еб'"
+    );
+}
+
+/// B7 (#23): `--suffix -ну-` (space syntax, leading hyphen) must parse and yield
+/// the same output as the `--suffix=-ну-` (equals) form.
+#[test]
+fn explore_suffix_leading_hyphen_space_and_equals_agree() {
+    let space = matcraft()
+        .args(["explore", "еб", "--suffix", "-ну-"])
+        .output()
+        .expect("command should run");
+    assert!(
+        space.status.success(),
+        "space-form `--suffix -ну-` should parse and succeed"
+    );
+
+    let equals = matcraft()
+        .args(["explore", "еб", "--suffix=-ну-"])
+        .output()
+        .expect("command should run");
+    assert!(
+        equals.status.success(),
+        "equals-form `--suffix=-ну-` should succeed"
+    );
+
+    assert_eq!(
+        space.stdout, equals.stdout,
+        "space and equals `--suffix` syntaxes must produce identical output"
+    );
+}
+
+/// B8 (#23 honesty): a verbal root under a non-matching hyphen-prefixed filter
+/// exits 0 with a "no forms for this filter" message — NOT a false noun-only
+/// label. `allow_hyphen_values` made this path reachable; it must stay honest.
+#[test]
+fn explore_verbal_root_nonmatching_filter_is_not_noun_only() {
+    matcraft()
+        .args(["explore", "еб", "--suffix", "-бред-"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Нет форм по заданному фильтру"))
+        .stdout(predicate::str::contains("именной корень").not());
+}
+
 // ---------------------------------------------------------------------------
 // D. root-of-the-day (deterministic within a day)
 // ---------------------------------------------------------------------------
