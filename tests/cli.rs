@@ -206,6 +206,57 @@ fn generate_root_count_three() {
 }
 
 // ---------------------------------------------------------------------------
+// D. root-of-the-day (deterministic within a day)
+// ---------------------------------------------------------------------------
+
+/// D1: `root-of-the-day` (classic) renders the same box as `random`.
+#[test]
+fn root_of_the_day_classic_renders_box() {
+    matcraft()
+        .args(["root-of-the-day"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("╔"))
+        .stdout(predicate::str::contains("Заметка:"));
+}
+
+/// D2: `--mode full root-of-the-day` — same box-rendering guarantee.
+#[test]
+fn root_of_the_day_full_renders_box() {
+    matcraft()
+        .args(["--mode", "full", "root-of-the-day"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("╔"))
+        .stdout(predicate::str::contains("Заметка:"));
+}
+
+/// D3: determinism within a day — two invocations produce byte-identical stdout.
+///
+/// Test-methodology honesty: a theoretical ~1e-11 flake exists if the two
+/// (milliseconds-apart) runs straddle a UTC midnight boundary exactly. This is
+/// negligible; the hard determinism guarantee lives in the unit test
+/// `test_root_of_the_day_is_stable_for_fixed_index`. This test checks the
+/// end-to-end dispatch (clap → SystemTime → engine → print) plus equality.
+#[test]
+fn root_of_the_day_is_deterministic_within_a_day() {
+    let first = matcraft()
+        .args(["root-of-the-day"])
+        .output()
+        .expect("command should run");
+    let second = matcraft()
+        .args(["root-of-the-day"])
+        .output()
+        .expect("command should run");
+    assert!(first.status.success());
+    assert!(second.status.success());
+    assert_eq!(
+        first.stdout, second.stdout,
+        "two same-day invocations must produce byte-identical stdout"
+    );
+}
+
+// ---------------------------------------------------------------------------
 // C. clap parse errors (exit 2 by contract)
 // ---------------------------------------------------------------------------
 
@@ -225,12 +276,17 @@ fn missing_subcommand_exits_2() {
     matcraft().assert().failure().code(2);
 }
 
-/// C3: `--version` smoke — exit 0, version string on stdout.
+/// C3: `--version` smoke — exit 0, `matcraft <crate version>` on stdout.
+///
+/// Version-agnostic: asserts against `CARGO_PKG_VERSION` (known to the test
+/// binary at compile time) rather than a hardcoded number, so a version bump
+/// never breaks this test.
 #[test]
 fn version_flag_smoke() {
     matcraft()
         .args(["--version"])
         .assert()
         .success()
-        .stdout(predicate::str::contains("0.5"));
+        .stdout(predicate::str::starts_with("matcraft "))
+        .stdout(predicate::str::contains(env!("CARGO_PKG_VERSION")));
 }

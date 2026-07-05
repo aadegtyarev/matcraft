@@ -22,7 +22,7 @@ matcraft — CLI-инструмент для исследования морфо
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    CLI (main.rs)                                  │
-│  clap: explore, generate, list-roots, random              │
+│  clap: explore, generate, list-roots, random, root-of-the-day │
 │  + --mode {classic|full} для управления набором корней              │
 │  Валидация: корень существует, count ≤ 100                        │
 └──────────────────────┬───────────────────────────────────────────┘
@@ -58,7 +58,7 @@ matcraft — CLI-инструмент для исследования морфо
 ### Слой CLI (src/main.rs)
 
 Отвечает за:
-- Парсинг subcommands: `explore`, `generate`, `list-roots`, `random`
+- Парсинг subcommands: `explore`, `generate`, `list-roots`, `random`, `root-of-the-day`
 - Глобальный флаг `--mode {classic|full}` (default: classic)
 - Валидацию: корень существует (для explore/generate), count ≤ 100
 - Вывод результата пользователю
@@ -69,7 +69,7 @@ matcraft — CLI-инструмент для исследования морфо
 Шесть модулей:
 
 #### mod.rs
-Re-exports: `explore()`, `generate()`, `random_root()`, типы `Attestation`, `VerbForm`, etc.
+Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`, `sample_forms()`, типы `Attestation`, `VerbForm`, etc.
 
 #### morpheme.rs
 Типы и таблицы морфем (инвентарь корней — в `roots/`):
@@ -105,6 +105,10 @@ Re-exports: `explore()`, `generate()`, `random_root()`, типы `Attestation`, 
 - `generate(mode, root_opt, count)` — выбирает случайные формы из пула режима.
 - `list_roots(mode)` — возвращает список корней, отфильтрованный по режиму.
 - `random_root(mode)` — выбирает случайный корень из доступных в режиме.
+- `root_of_the_day(mode, day_index)` — детерминированный корень: сид `day_index`
+  через `StdRng`, тот же выбор из пула, что `random_root` (общий помощник `select_root`).
+- `sample_forms(rd)` — до 3 примеров-инфинитивов уровня common для рамки (общий для
+  `random` и `root-of-the-day`).
 - Смотрит attestation через `roots::lookup_attestation()`.
 
 #### roots/ (подмодуль)
@@ -158,6 +162,7 @@ Re-exports: `explore()`, `generate()`, `random_root()`, типы `Attestation`, 
 - `list-roots` — возвращает корни, где `mode.includes(rd)` истинно.
 - `generate` (без --root) — выбирает из корней текущего режима.
 - `random` — выбирает из корней текущего режима.
+- `root-of-the-day` — выбирает из корней текущего режима (детерминированно по суткам).
 
 ## Таксономия корней по Плуцеру-Сарно
 

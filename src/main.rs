@@ -45,6 +45,10 @@ enum Commands {
 
     /// Случайный корень с лингвистической заметкой
     Random,
+
+    /// Детерминированный «корень дня»: один и тот же корень в пределах суток
+    #[command(name = "root-of-the-day")]
+    RootOfTheDay,
 }
 
 fn main() {
@@ -96,21 +100,22 @@ fn main() {
 
         Commands::Random => {
             let rd = engine::random_root(cli.mode);
-            // Get sample forms: filter for infinitive (ending "ть") with Common attestation
-            let samples: Vec<String> = if let Ok(result) = engine::explore(rd.name, None) {
-                result
-                    .forms
-                    .iter()
-                    .filter(|f| {
-                        f.ending_val == "ть"
-                            && f.attestation == engine::morpheme::Attestation::Common
-                    })
-                    .take(3)
-                    .map(|f| f.form.clone())
-                    .collect()
-            } else {
-                Vec::new()
-            };
+            let samples = engine::sample_forms(rd);
+            let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
+            let output = engine::display::format_random(rd, &sample_refs);
+            println!("{output}");
+        }
+
+        Commands::RootOfTheDay => {
+            // Only impure part: today's UTC day index from the system clock
+            // (seconds since the epoch / 86_400). "Clock before epoch" is
+            // impossible in practice; fall back to index 0 — still deterministic.
+            let day_index = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() / 86_400)
+                .unwrap_or(0);
+            let rd = engine::root_of_the_day(cli.mode, day_index);
+            let samples = engine::sample_forms(rd);
             let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
             let output = engine::display::format_random(rd, &sample_refs);
             println!("{output}");

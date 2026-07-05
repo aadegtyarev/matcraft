@@ -4,4 +4,4 @@ pub mod morpheme;
 pub mod paradigm;
 pub mod roots;
 
-pub use paradigm::{explore, generate, random_root};
+pub use paradigm::{explore, generate, random_root, root_of_the_day, sample_forms};

@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-07-05
+
+### Added
+
+- **`root-of-the-day` subcommand** — a deterministic "root of the day": the same root
+  is returned throughout one calendar day (UTC) and changes daily, seeded from the date.
+  Distinct from `random`, which stays fresh-random per invocation. Honors `--mode`. (#5)
+
 ## [0.5.1] — 2026-07-05
 
 ### Added
