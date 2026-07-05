@@ -1,9 +1,11 @@
 //! Output formatting for the paradigm explorer, root list, and random display.
 
 use crate::engine::morpheme::{
-    Attestation, ParadigmResult, RootData, all_roots, suffix_display, suffix_gloss,
+    Attestation, Domain, Mode, ParadigmResult, RootData, suffix_display, suffix_gloss,
+    suffix_index_for_val,
 };
 use crate::engine::paradigm::list_roots;
+use crate::engine::roots::all_roots;
 
 /// Format an explore result as a human-readable table.
 ///
@@ -11,20 +13,10 @@ use crate::engine::paradigm::list_roots;
 ///
 /// ```text
 /// Корень: еб- 'fuck, copulate'
-/// Всего комбинаций: 9 префиксов × 2 суффикса = 18 форм
+///   Домен: ядро · продуктивность A
 ///
 /// ═══ Суффикс -а- (имперфектив) ═══
-///
-///   Префикс    | Форма (инф)       | Аттестация | Значение
-///   -----------+-------------------+------------+----------------------
-///   (без)       | ебать             | common     | совершать половой акт
-///   вы-         | выебать           | common     | износить, испортить
-///   ...
-///
-///   Итого: common (6), rare (3), possible (0), impossible (0)
-///
-/// ═══ Суффикс -ну- (однократный) ═══
-///   ...
+/// ...
 /// ```
 pub fn format_explore(result: &ParadigmResult) -> String {
     let mut out = String::new();
@@ -37,10 +29,17 @@ pub fn format_explore(result: &ParadigmResult) -> String {
     out.push_str(&root_display);
     out.push('\n');
 
-    // Handle roots with no verb forms (e.g., манд-, елд-)
+    // Domain + productivity (source §1 / §2)
+    out.push_str(&format!(
+        "  Домен: {} · продуктивность {}\n",
+        domain_inline(result.root_domain),
+        result.root_productivity
+    ));
+
+    // Handle roots with no verb forms (noun-only roots, or empty suffix_indices)
     if result.forms.is_empty() {
-        out.push_str("  Нет глагольных форм для данного корня.\n");
-        out.push_str("  Полная парадигма включает именную деривацию (отложено до v0.5+).\n");
+        out.push_str("  Глагольная парадигма отсутствует, чисто именной корень.\n");
+        out.push_str("  Именная деривация в текущей версии движка не реализована.\n");
         let rd = all_roots().iter().find(|r| r.name == result.root_name);
         if let Some(rd) = rd {
             out.push_str(&format!("  Заметка: {}\n", rd.linguistic_note));
@@ -85,9 +84,8 @@ pub fn format_explore(result: &ParadigmResult) -> String {
     // Group forms by suffix
     let mut groups: Vec<(&str, Vec<&crate::engine::morpheme::VerbForm>)> = Vec::new();
     for vf in &result.forms {
-        // Find the right group
-        let group_idx = groups.iter().position(|(k, _)| *k == vf.suffix_val);
-        if let Some(idx) = group_idx {
+        let suffix_section_idx = groups.iter().position(|(k, _)| *k == vf.suffix_val);
+        if let Some(idx) = suffix_section_idx {
             groups[idx].1.push(vf);
         } else {
             groups.push((vf.suffix_val, vec![vf]));
@@ -100,12 +98,11 @@ pub fn format_explore(result: &ParadigmResult) -> String {
     let mut overall_impossible = 0usize;
 
     for (suffix_val_str, group) in &groups {
-        // Section header — only infinitive-ending forms in the main table
-        let gloss = suffix_gloss(get_suffix_index(suffix_val_str));
+        let idx = suffix_index_for_val(suffix_val_str);
         let section_title = format!(
             "═══ Суффикс {} ({}) ═══",
-            suffix_display(get_suffix_index(suffix_val_str)),
-            gloss
+            suffix_display(idx),
+            suffix_gloss(idx)
         );
         out.push_str(&section_title);
         out.push_str("\n\n");
@@ -132,7 +129,6 @@ pub fn format_explore(result: &ParadigmResult) -> String {
                 vf.attestation,
             );
 
-            // Pad columns
             out.push_str(&format!(
                 "  {:<12} | {:<17} | {:<10} | {}\n",
                 vf.prefix_display, vf.form, att_str, note_str
@@ -159,20 +155,32 @@ pub fn format_explore(result: &ParadigmResult) -> String {
     out
 }
 
-/// Format the root list output.
-pub fn format_list_roots() -> String {
-    let roots = list_roots();
+/// Format the root list output for a given mode.
+pub fn format_list_roots(mode: Mode) -> String {
+    let roots = list_roots(mode);
     let mut out = String::new();
 
-    out.push_str(&format!("Доступные корни ({}):\n", roots.len()));
-    for root_name in &roots {
-        let rd = crate::engine::morpheme::root_data(root_name);
-        let gloss_str = rd
-            .and_then(|r| r.gloss)
-            .map(|g| format!("'{}'", g))
-            .unwrap_or_default();
-        out.push_str(&format!("  {}-   {}\n", root_name, gloss_str));
+    match mode {
+        Mode::Classic => {
+            out.push_str(&format!("Доступные корни ({}):\n", roots.len()));
+            for name in &roots {
+                if let Some(rd) = all_roots().iter().find(|r| r.name == *name) {
+                    out.push_str(&format_root_line(rd));
+                }
+            }
+        }
+        Mode::Full => {
+            out.push_str(&format!("Все корни ({}):\n", roots.len()));
+            // Group by semantic domain (source §1), in inventory order.
+            for domain in [Domain::Nuclear, Domain::Excretory, Domain::Peripheral] {
+                out.push_str(&format!("  --- {} ---\n", domain_list_header(domain)));
+                for rd in all_roots().iter().filter(|r| r.domain == domain) {
+                    out.push_str(&format_root_line(rd));
+                }
+            }
+        }
     }
+
     out.push('\n');
     let root_form = if roots.len() == 1 {
         "корень"
@@ -184,7 +192,45 @@ pub fn format_list_roots() -> String {
     out.push_str(&format!("  Всего: {} {}\n", roots.len(), root_form));
     out.push_str("  Команда: matcraft explore <корень> для полной парадигмы\n");
 
+    if matches!(mode, Mode::Classic) {
+        out.push_str(
+            "  Используйте --mode full для всех 35 корней (включая дрочить, жрать, говно, ...)\n",
+        );
+    }
+
     out
+}
+
+/// One list line for a root: name, gloss, productivity class, and noun-only marker.
+fn format_root_line(rd: &RootData) -> String {
+    let gloss_str = rd.gloss.map(|g| format!("'{}'", g)).unwrap_or_default();
+    let noun_marker = if rd.suffix_indices.is_empty() {
+        " (только именной)"
+    } else {
+        ""
+    };
+    format!(
+        "  {}-   {} [{}]{}\n",
+        rd.name, gloss_str, rd.productivity, noun_marker
+    )
+}
+
+/// Domain header for the full-list grouping.
+fn domain_list_header(domain: Domain) -> &'static str {
+    match domain {
+        Domain::Nuclear => "Ядро",
+        Domain::Excretory => "Экскреторная",
+        Domain::Peripheral => "Периферия",
+    }
+}
+
+/// Domain name inline in the explore header.
+fn domain_inline(domain: Domain) -> &'static str {
+    match domain {
+        Domain::Nuclear => "ядро",
+        Domain::Excretory => "экскреторная",
+        Domain::Peripheral => "периферия",
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -247,7 +293,13 @@ pub fn format_random(rd: &RootData, sample_forms: &[&str]) -> String {
     ));
 
     // Sample forms
-    if sample_forms.is_empty() {
+    if sample_forms.is_empty() && rd.suffix_indices.is_empty() {
+        out.push_str(&format!(
+            "║  {:<width$} ║\n",
+            "Примеры: именной корень (нет глагольных форм)",
+            width = content_width + 2
+        ));
+    } else if sample_forms.is_empty() {
         out.push_str(&format!(
             "║  {:<width$} ║\n",
             "Примеры: не указаны",
@@ -289,12 +341,15 @@ pub fn format_random(rd: &RootData, sample_forms: &[&str]) -> String {
 }
 
 /// Simple word-wrapping: split text at word boundaries to fit `line_width`.
+///
+/// Widths are measured in characters, not bytes, so Cyrillic text (2 bytes per
+/// letter in UTF-8) wraps at the intended column rather than half of it.
 fn wrap_text(text: &str, line_width: usize) -> Vec<String> {
     let mut result = Vec::new();
     let mut current = String::new();
 
     for word in text.split_whitespace() {
-        if current.len() + word.len() + 1 > line_width && !current.is_empty() {
+        if current.chars().count() + word.chars().count() + 1 > line_width && !current.is_empty() {
             result.push(current.clone());
             current.clear();
         }
@@ -342,16 +397,6 @@ fn count_attestation(
     }
 }
 
-/// Get the suffix index for a suffix value string.
-fn get_suffix_index(val: &str) -> usize {
-    match val {
-        "а" => 0,
-        "ну" => 1,
-        "е" => 2,
-        _ => 0,
-    }
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -360,6 +405,7 @@ fn get_suffix_index(val: &str) -> usize {
 mod tests {
     use super::*;
     use crate::engine::paradigm::explore;
+    use crate::engine::roots::root_data;
 
     #[test]
     fn test_format_explore_contains_root() {
@@ -369,6 +415,20 @@ mod tests {
         assert!(
             output.contains("common"),
             "Output should contain attestation labels"
+        );
+    }
+
+    #[test]
+    fn test_format_explore_shows_domain_and_productivity() {
+        let result = explore("еб", None).expect("еб should be valid");
+        let output = format_explore(&result);
+        assert!(
+            output.contains("Домен: ядро"),
+            "Output should name the domain"
+        );
+        assert!(
+            output.contains("продуктивность A"),
+            "еб- should show productivity A"
         );
     }
 
@@ -383,29 +443,72 @@ mod tests {
     }
 
     #[test]
-    fn test_format_list_roots_contains_eb() {
-        let output = format_list_roots();
+    fn test_format_list_roots_classic_contains_eb() {
+        let output = format_list_roots(Mode::Classic);
         assert!(output.contains("еб"), "Output should contain еб root");
         assert!(
             output.contains("корней"),
             "Output should contain root count in Russian"
         );
+        assert!(output.contains("9"), "Classic mode should show 9 roots");
+    }
+
+    #[test]
+    fn test_format_list_roots_full_contains_35() {
+        let output = format_list_roots(Mode::Full);
+        assert!(output.contains("35"), "Full mode should show 35 roots");
+    }
+
+    #[test]
+    fn test_format_list_roots_full_contains_domain_headers() {
+        let output = format_list_roots(Mode::Full);
+        assert!(output.contains("Ядро"), "Should show Nuclear domain header");
+        assert!(
+            output.contains("Экскреторная"),
+            "Should show Excretory domain header"
+        );
+        assert!(
+            output.contains("Периферия"),
+            "Should show Peripheral domain header"
+        );
+    }
+
+    #[test]
+    fn test_format_list_roots_shows_productivity() {
+        let output = format_list_roots(Mode::Full);
+        assert!(
+            output.contains("[A]"),
+            "Full list should show productivity class markers"
+        );
     }
 
     #[test]
     fn test_format_explore_empty_forms_message() {
-        // манд- has empty suffix_indices → no forms
         let result = explore("манд", None).expect("манд should be valid");
         let output = format_explore(&result);
         assert!(
-            output.contains("Нет глагольных форм"),
-            "Output should show empty message"
+            output.contains("Глагольная парадигма отсутствует"),
+            "Output should show noun-only message"
+        );
+        assert!(
+            !output.contains("v0.5"),
+            "Noun-only message must be version-neutral"
+        );
+    }
+
+    #[test]
+    fn test_format_explore_group_5_noun_only() {
+        let result = explore("сиповк", None).expect("сиповк should be valid");
+        let output = format_explore(&result);
+        assert!(
+            output.contains("Глагольная парадигма отсутствует"),
+            "Noun-only root should show noun-only message"
         );
     }
 
     #[test]
     fn test_format_random_contains_root_name() {
-        let rd = crate::engine::morpheme::root_data("еб").unwrap();
+        let rd = root_data("еб").unwrap();
         let samples = vec!["ебать", "ебнуть"];
         let output = format_random(rd, &samples);
         assert!(
@@ -424,12 +527,36 @@ mod tests {
 
     #[test]
     fn test_format_random_empty_forms() {
-        let rd = crate::engine::morpheme::root_data("манд").unwrap();
+        let rd = root_data("манд").unwrap();
+        let samples: Vec<&str> = Vec::new();
+        let output = format_random(rd, &samples);
+        assert!(
+            output.contains("именной корень"),
+            "Empty samples for noun-only root should show message"
+        );
+    }
+
+    #[test]
+    fn test_format_random_verb_root_no_samples() {
+        // хуй- has verb classes but no Common forms post-grounding; `random` passes
+        // empty samples and the display must show "не указаны", not crash.
+        let rd = root_data("хуй").unwrap();
         let samples: Vec<&str> = Vec::new();
         let output = format_random(rd, &samples);
         assert!(
             output.contains("не указаны"),
-            "Empty samples should show fallback"
+            "verb root with no sample forms should show 'не указаны'"
+        );
+    }
+
+    #[test]
+    fn test_format_random_group_5() {
+        let rd = root_data("сиповк").unwrap();
+        let samples: Vec<&str> = Vec::new();
+        let output = format_random(rd, &samples);
+        assert!(
+            output.contains("именной корень"),
+            "Noun-only root should show noun-only message"
         );
     }
 
@@ -449,8 +576,25 @@ mod tests {
             "Long text should be split into multiple lines"
         );
         for line in &result {
-            assert!(line.len() <= 20, "Each line should fit width");
+            // Measured in characters (the fix): a Cyrillic line must fit the
+            // char-column width, not the byte width.
+            assert!(
+                line.chars().count() <= 20,
+                "Each line should fit width in characters"
+            );
         }
+    }
+
+    #[test]
+    fn test_wrap_text_fills_to_char_width() {
+        // Regression for the byte-vs-char bug: with char counting, a line of
+        // Cyrillic words packs close to the width instead of ~half of it.
+        let text = "аб вг де жз ик лм но пр ст уф хц чш";
+        let result = wrap_text(text, 20);
+        assert!(
+            result.iter().any(|l| l.chars().count() > 10),
+            "char-based wrapping should pack more than ~10 chars per line"
+        );
     }
 
     #[test]
@@ -468,22 +612,39 @@ mod tests {
         let result = explore("пизд", None).expect("пизд should be valid");
         let output = format_explore(&result);
         assert!(
-            output.contains("-е-/-и-"),
-            "Output should contain -е-/-и- suffix class"
+            output.contains("-е-"),
+            "Output should contain -е- suffix class"
         );
         assert!(
             output.contains("пиздеть"),
             "Output should contain пиздеть form"
         );
+        assert!(
+            output.contains("-и-"),
+            "Output should contain -и- suffix class"
+        );
     }
 
     #[test]
-    fn test_format_list_roots_shows_all_9() {
-        let output = format_list_roots();
-        assert!(output.contains("9 корней"), "Output should say '9 корней'");
-        assert!(output.contains("еб"), "Output should contain еб");
-        assert!(output.contains("сра"), "Output should contain сра");
-        assert!(output.contains("пизд"), "Output should contain пизд");
-        assert!(output.contains("хуй"), "Output should contain хуй");
+    fn test_format_list_roots_full_shows_noun_only_marker() {
+        let output = format_list_roots(Mode::Full);
+        assert!(
+            output.contains("только именной"),
+            "Full mode list should show noun-only marker for noun-only roots"
+        );
+    }
+
+    #[test]
+    fn test_format_explore_droch_has_i_section() {
+        let result = explore("дроч", None).expect("дроч should be valid");
+        let output = format_explore(&result);
+        assert!(
+            output.contains("-и-"),
+            "Output should contain -и- suffix section"
+        );
+        assert!(
+            output.contains("дрочить"),
+            "Output should contain дрочить form"
+        );
     }
 }

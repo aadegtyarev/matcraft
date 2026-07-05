@@ -8,6 +8,10 @@ mod engine;
     about = "CLI-инструмент для исследования морфологической парадигмы русского мата"
 )]
 struct Cli {
+    /// Режим отображения корней: classic (9 корней) или full (все 35)
+    #[arg(long, default_value_t = engine::morpheme::Mode::Classic)]
+    mode: engine::morpheme::Mode,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -73,25 +77,25 @@ fn main() {
 
             // Validate root if provided
             if let Some(r) = root_name {
-                if engine::morpheme::root_data(r).is_none() {
+                if engine::roots::root_data(r).is_none() {
                     eprintln!("Ошибка: корень '{}' не найден.", r);
                     std::process::exit(1);
                 }
             }
 
-            let forms = engine::generate(root_name, count);
+            let forms = engine::generate(cli.mode, root_name, count);
             for form in forms {
                 println!("{form}");
             }
         }
 
         Commands::ListRoots => {
-            let output = engine::display::format_list_roots();
+            let output = engine::display::format_list_roots(cli.mode);
             println!("{output}");
         }
 
         Commands::Random => {
-            let rd = engine::random_root();
+            let rd = engine::random_root(cli.mode);
             // Get sample forms: filter for infinitive (ending "ть") with Common attestation
             let samples: Vec<String> = if let Ok(result) = engine::explore(rd.name, None) {
                 result
