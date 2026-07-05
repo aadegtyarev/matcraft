@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] — 2026-07-05
+
+### Added
+
+- **Root expansion from 9 to 35 roots**, grounded on the Plutser-Sarno synthesis.
+  Nuclear (7): еб-, пизд-, хуй-, бляд-, муд-, манд-, елд-.
+  Excretory (7): сра-, сса-, перд-, бзд-, дрист-, говн-, жоп-.
+  Peripheral (21): дроч-, трах-, жр-, хер-, хар-, блев-, залуп-, пидор-, курв-,
+  сиповк-, секел-, поц-, молофь-, минж-, целк-, королёвк-, кун-, сперм-, менстр-,
+  минет-, гондон-.
+- **Two-axis taxonomy grounded on the source:** `Domain` (Nuclear / Excretory /
+  Peripheral, source §1) and `ProductivityClass` (A–E, source §2). Productivity is
+  now a visible attribute in `list-roots` and the `explore` header.
+- **Source-grounded attestation.** Common/Rare levels trace to the Plutser-Sarno
+  synthesis; analogical extrapolation is honestly marked `possible`. Methodology and
+  the full inventory live in `docs/decisions/plutser-sarno-taxonomy.md`.
+- **New suffix class: -и- (suffix index 3).** Supports -ить verbs (дрочить, мудить,
+  херить). Three endings: infinitive -ить, past m.sg -ил, present 3sg -ит.
+- **`--mode {classic|full}` CLI flag.** Classic (default) shows the 9 backward-
+  compatible roots (nuclear ∪ excretory≤B); full shows all 35. Direct
+  `explore <root>` works regardless of mode.
+- **Domain grouping** in `list-roots --mode full`: output grouped by semantic domain
+  with headers (Ядро / Экскреторная / Периферия). Noun-only roots marked "(только именной)".
+- **Root allomorphy support:** `present_stem` field on `RootData` enables stem
+  alternations (e.g., блев- → present stem блю- for блюёт).
+- **Prefix expansion from 9 to 18:** added в-, вз-/вс-, о-/об-, по-, под-, при-,
+  раз-/рас-, с-, у-.
+- **Prefix allomorph selection** for раз-/рас- and вз-/вс- (voice assimilation)
+  and о-/об- (consonant-deletion before consonant-initial roots).
+
+### Changed
+
+- муд- root: suffix class changed from -а- to -и- (actual verb forms are мудить,
+  not *мудать). Attestation data updated accordingly.
+- пизд- root: added -и- suffix class (пиздить), in addition to existing
+  -е- (пиздеть) and -ну- (пиздануть) classes.
+- перд- root: corrected to the -е- class (пердеть) per source §3; the previous -а-
+  class built the non-word *пердать.
+- `RootData` now carries `domain` (Domain), `productivity` (ProductivityClass), and
+  `present_stem` (Option<&str>) instead of a single `group` field.
+- `ParadigmResult` now carries `root_domain` and `root_productivity`.
+- Root inventory (`ROOTS`, `all_roots()`, `root_data()`) and attestation tables live
+  together in `src/engine/roots/` — one home per root; `morpheme.rs` holds types and
+  morpheme inventories only.
+- `list_roots()`, `generate()`, `random_root()` now take a `mode` parameter.
+- `format_list_roots()` now takes a `mode` parameter for mode-aware display.
+- Prefix count increased from 9 to 18.
+- `wrap_text` now measures line width in characters, not bytes, so Cyrillic notes in
+  `random` wrap at the intended column.
+- Version bumped to 0.5.0.
+
+### Documentation
+
+- `docs/decisions/plutser-sarno-taxonomy.md`: new one-home reference for the root
+  inventory, semantic domains, productivity classes, and attestation methodology.
+- `README.md`: added "Режимы" section, primary-source citations (tom 1/2, введение
+  864–870), and source-grounded attestation methodology.
+- `docs/architecture.md`: Domain/ProductivityClass model, corrected root sets and
+  module map, SUFFIXES = 4, attestation grounded on the reference doc.
+- `docs/threat-model.md`: added `random` and `--mode` surfaces.
+- `CHANGELOG.md`: v0.5.0 entry.
+
 ## [0.4.0] — 2026-07-05
 
 ### Added
