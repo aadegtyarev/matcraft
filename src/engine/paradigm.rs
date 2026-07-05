@@ -5,9 +5,13 @@
 //! - `generate(mode, root_opt, count)` — generates random forms from the pool
 //! - `list_roots(mode)` — returns available roots filtered by mode
 //! - `random_root(mode)` — returns a random root from those available in mode
+//! - `root_of_the_day(mode, day_index)` — deterministic root, stable within a day index
+//! - `sample_forms(rd)` — up to 3 Common infinitives for the box display
 
 use rand::prelude::IndexedRandom;
+use rand::rngs::StdRng;
 use rand::seq::SliceRandom;
+use rand::{Rng, SeedableRng};
 
 use crate::engine::grammar::build_form;
 use crate::engine::morpheme::{
@@ -151,13 +155,49 @@ pub fn list_roots(mode: Mode) -> Vec<&'static str> {
         .collect()
 }
 
+/// Pick one root from the mode's pool using the supplied RNG.
+///
+/// Shared by `random_root` (fresh `rand::rng()`) and `root_of_the_day`
+/// (seeded `StdRng`), so the pool-selection logic lives in one place.
+fn select_root<R: Rng + ?Sized>(mode: Mode, rng: &mut R) -> &'static RootData {
+    let roots: Vec<&RootData> = all_roots().iter().filter(|r| mode.includes(r)).collect();
+    roots.choose(rng).expect("at least one root must exist")
+}
+
 /// Select a random root from those available in the given mode.
 pub fn random_root(mode: Mode) -> &'static RootData {
-    let roots: Vec<&RootData> = all_roots().iter().filter(|r| mode.includes(r)).collect();
-    let mut rng = rand::rng();
-    roots
-        .choose(&mut rng)
-        .expect("at least one root must exist")
+    select_root(mode, &mut rand::rng())
+}
+
+/// Select the deterministic "root of the day" for the given day index.
+///
+/// The same `day_index` always yields the same root (within a fixed `rand`
+/// major version): the index seeds a `StdRng`, which drives the same pool
+/// selection as `random_root`. `StdRng`'s algorithm is not guaranteed portable
+/// across `rand` major versions, so a future bump may reshuffle the day→root
+/// mapping — this does not break the contract, which promises "one root within
+/// a day", not "day X → root Y forever" (see `docs/contracts/cli.md`).
+pub fn root_of_the_day(mode: Mode, day_index: u64) -> &'static RootData {
+    select_root(mode, &mut StdRng::seed_from_u64(day_index))
+}
+
+/// Assemble up to 3 Common infinitive sample forms for a root's box display.
+///
+/// Filters the root's paradigm for infinitives (ending `ть`) with `Common`
+/// attestation and takes the first three. Returns an empty `Vec` on an explore
+/// error or a root with no such forms (e.g. a purely nominal root). Shared by
+/// the `random` and `root-of-the-day` commands so the assembly is not copied.
+pub fn sample_forms(rd: &RootData) -> Vec<String> {
+    match explore(rd.name, None) {
+        Ok(result) => result
+            .forms
+            .iter()
+            .filter(|f| f.ending_val == "ть" && f.attestation == Attestation::Common)
+            .take(3)
+            .map(|f| f.form.clone())
+            .collect(),
+        Err(_) => Vec::new(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -596,5 +636,71 @@ mod tests {
         for vf in &result.forms {
             assert_eq!(vf.suffix_val, "и");
         }
+    }
+
+    #[test]
+    fn test_root_of_the_day_is_stable_for_fixed_index() {
+        // The core contract: a fixed day index always yields the same root.
+        assert_eq!(
+            root_of_the_day(Mode::Full, 12345).name,
+            root_of_the_day(Mode::Full, 12345).name,
+            "same day index must yield the same root"
+        );
+    }
+
+    #[test]
+    fn test_root_of_the_day_varies_across_indices() {
+        // Not a constant: across 0..100 indices we see more than one root.
+        // Can't require pairwise distinctness — only 9/35 roots exist, so
+        // adjacent indices may collide. We assert "not always the same root".
+        let names: std::collections::HashSet<&str> = (0..100)
+            .map(|i| root_of_the_day(Mode::Full, i).name)
+            .collect();
+        assert!(names.len() > 1, "root of the day must not be constant");
+    }
+
+    #[test]
+    fn test_root_of_the_day_classic_only_classic_roots() {
+        // Mode invariant (mirror of test_random_root_classic_only_classic_roots).
+        for i in 0..50 {
+            let rd = root_of_the_day(Mode::Classic, i);
+            assert!(
+                Mode::Classic.includes(rd),
+                "root_of_the_day(Classic, {i}) must be visible in Classic mode"
+            );
+        }
+    }
+
+    #[test]
+    fn test_root_of_the_day_returns_valid_root() {
+        let rd = root_of_the_day(Mode::Full, 42);
+        assert!(
+            all_roots().iter().any(|r| r.name == rd.name),
+            "root_of_the_day should return a known root"
+        );
+    }
+
+    #[test]
+    fn test_sample_forms_verb_root_nonempty_and_contains_root() {
+        let rd = root_data("еб").expect("еб should be a valid root");
+        let samples = sample_forms(rd);
+        assert!(!samples.is_empty(), "еб- should yield Common infinitives");
+        for form in &samples {
+            assert!(
+                form.contains("еб"),
+                "sample form '{form}' should contain root 'еб'"
+            );
+        }
+    }
+
+    #[test]
+    fn test_sample_forms_nominal_root_empty() {
+        // манд- is purely nominal — no verb forms, so no samples (mirrors the
+        // inline logic's contract).
+        let rd = root_data("манд").expect("манд should be a valid root");
+        assert!(
+            sample_forms(rd).is_empty(),
+            "nominal root манд- should yield no sample forms"
+        );
     }
 }
