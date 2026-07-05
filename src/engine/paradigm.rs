@@ -5,6 +5,7 @@
 //! - `generate(root_opt, count)` — generates random forms from the pool
 //! - `list_roots()` — returns available roots
 
+use rand::prelude::IndexedRandom;
 use rand::seq::SliceRandom;
 
 use crate::engine::grammar::build_form;
@@ -55,7 +56,7 @@ pub fn explore(
             }
 
             // Resolve prefix allomorph before the root
-            let prefix_form = select_prefix_allomorph(p_val, allomorphs, rd.name);
+            let prefix_form = select_prefix_allomorph(p_val, allomorphs, rd.val);
 
             // Get endings for this suffix class
             let end_indices = endings_for_suffix(suffix_idx);
@@ -67,7 +68,7 @@ pub fn explore(
                 let (att, note) = lookup_attestation(rd.name, prefix_idx, suffix_idx);
 
                 // Build the full word form
-                let form = build_form(prefix_form, rd.name, s_val, e_val);
+                let form = build_form(prefix_form, rd.val, s_val, e_val);
 
                 forms.push(VerbForm {
                     prefix_val: prefix_form,
@@ -141,6 +142,15 @@ pub fn generate(root_name: Option<&str>, count: usize) -> Vec<String> {
 /// List available roots.
 pub fn list_roots() -> Vec<&'static str> {
     all_roots().iter().map(|r| r.name).collect()
+}
+
+/// Select a random root from the available ones.
+pub fn random_root() -> &'static crate::engine::morpheme::RootData {
+    let roots = all_roots();
+    let mut rng = rand::rng();
+    roots
+        .choose(&mut rng)
+        .expect("at least one root must exist")
 }
 
 // ---------------------------------------------------------------------------
@@ -268,5 +278,192 @@ mod tests {
             forms.contains(&"ебнуть"),
             "ебнуть should be in the paradigm"
         );
+    }
+
+    #[test]
+    fn test_list_roots_returns_9() {
+        let roots = list_roots();
+        assert_eq!(roots.len(), 9);
+    }
+
+    #[test]
+    fn test_list_roots_contains_all_new_roots() {
+        let roots = list_roots();
+        for name in &[
+            "еб", "сра", "сса", "пизд", "хуй", "бляд", "муд", "манд", "елд",
+        ] {
+            assert!(roots.contains(name), "list_roots should contain '{}'", name);
+        }
+    }
+
+    #[test]
+    fn test_explore_sra_returns_combinations() {
+        let result = explore("сра", None).expect("сра should be a valid root");
+        assert_eq!(result.root_name, "сра");
+        // 9 prefixes × 2 suffixes = 18 combos
+        let mut seen: Vec<(&str, &str)> = Vec::new();
+        for vf in &result.forms {
+            let key = (vf.prefix_display, vf.suffix_val);
+            if !seen.contains(&key) {
+                seen.push(key);
+            }
+        }
+        assert_eq!(
+            seen.len(),
+            18,
+            "Expected 18 prefix×suffix combinations for сра-"
+        );
+    }
+
+    #[test]
+    fn test_explore_ssa_returns_combinations() {
+        let result = explore("сса", None).expect("сса should be a valid root");
+        assert_eq!(result.root_name, "сса");
+        // 9 prefixes × 2 suffixes = 18 combos
+        let mut seen: Vec<(&str, &str)> = Vec::new();
+        for vf in &result.forms {
+            let key = (vf.prefix_display, vf.suffix_val);
+            if !seen.contains(&key) {
+                seen.push(key);
+            }
+        }
+        assert_eq!(
+            seen.len(),
+            18,
+            "Expected 18 prefix×suffix combinations for сса-"
+        );
+    }
+
+    #[test]
+    fn test_explore_pizd_has_ei_class() {
+        let result = explore("пизд", None).expect("пизд should be a valid root");
+        assert_eq!(result.root_name, "пизд");
+        // Should contain -е-/-и- class forms (пиздеть, пиздел, пиздит)
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        assert!(forms.contains(&"пиздеть"), "пиздеть should be in paradigm");
+        assert!(forms.contains(&"пиздел"), "пиздел should be in paradigm");
+        assert!(forms.contains(&"пиздит"), "пиздит should be in paradigm");
+        // Should contain -ну- class forms (eng: пизднуть, actual: пиздануть with epenthetic vowel)
+        assert!(
+            forms.contains(&"пизднуть"),
+            "пизднуть should be in paradigm"
+        );
+    }
+
+    #[test]
+    fn test_explore_khuy_has_nu_only() {
+        let result = explore("хуй", None).expect("хуй should be a valid root");
+        assert_eq!(result.root_name, "хуй");
+        // Only -ну- class forms
+        for vf in &result.forms {
+            assert_eq!(vf.suffix_val, "ну", "хуй- only has -ну- class");
+        }
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        assert!(forms.contains(&"хуйнуть"), "хуйнуть should be in paradigm");
+    }
+
+    #[test]
+    fn test_explore_blyad_has_ei_class() {
+        let result = explore("бляд", None).expect("бляд should be a valid root");
+        assert_eq!(result.root_name, "бляд");
+        // Only -е-/-и- class forms (блядеть)
+        for vf in &result.forms {
+            assert_eq!(vf.suffix_val, "е", "бляд- only has -е-/-и- class");
+        }
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        assert!(forms.contains(&"блядеть"), "блядеть should be in paradigm");
+    }
+
+    #[test]
+    fn test_explore_mand_returns_empty() {
+        let result = explore("манд", None).expect("манд should be a valid root");
+        assert_eq!(result.root_name, "манд");
+        // Empty suffix_indices → no forms generated
+        assert!(result.forms.is_empty(), "манд- should have no verb forms");
+    }
+
+    #[test]
+    fn test_explore_eld_returns_empty() {
+        let result = explore("елд", None).expect("елд should be a valid root");
+        assert_eq!(result.root_name, "елд");
+        assert!(result.forms.is_empty(), "елд- should have no verb forms");
+    }
+
+    #[test]
+    fn test_explore_ei_forms_use_correct_endings() {
+        // -е-/-и- class: infinitive -еть, past -ел, present 3sg -ит
+        let result = explore("пизд", None).expect("пизд should be valid");
+        let infinitive: Vec<&str> = result
+            .forms
+            .iter()
+            .filter(|f| f.ending_val == "ть" && f.suffix_val == "е")
+            .map(|f| f.form.as_str())
+            .collect();
+        assert!(!infinitive.is_empty(), "should have infinitive forms");
+        // At least one form should end in -деть
+        assert!(infinitive.iter().any(|f| f.ends_with("деть")));
+
+        let past: Vec<&str> = result
+            .forms
+            .iter()
+            .filter(|f| f.ending_val == "л" && f.suffix_val == "е")
+            .map(|f| f.form.as_str())
+            .collect();
+        assert!(!past.is_empty(), "should have past forms");
+        assert!(past.iter().any(|f| f.ends_with("дел")));
+
+        let present: Vec<&str> = result
+            .forms
+            .iter()
+            .filter(|f| f.ending_val == "ит" && f.suffix_val == "е")
+            .map(|f| f.form.as_str())
+            .collect();
+        assert!(!present.is_empty(), "should have present 3sg forms");
+        assert!(present.iter().any(|f| f.ends_with("дит")));
+    }
+
+    #[test]
+    fn test_generate_from_sra() {
+        let forms = generate(Some("сра"), 3);
+        assert_eq!(forms.len(), 3);
+        for form in &forms {
+            assert!(
+                form.contains("ср"),
+                "Form '{}' should contain root 'ср'",
+                form
+            );
+        }
+    }
+
+    #[test]
+    fn test_generate_from_pizd() {
+        let forms = generate(Some("пизд"), 3);
+        assert_eq!(forms.len(), 3);
+        for form in &forms {
+            assert!(
+                form.contains("пизд"),
+                "Form '{}' should contain 'пизд'",
+                form
+            );
+        }
+    }
+
+    #[test]
+    fn test_random_root_returns_valid() {
+        let rd = random_root();
+        // Must be one of the known roots
+        let all = all_roots();
+        assert!(
+            all.iter().any(|r| r.name == rd.name),
+            "random_root should return a known root"
+        );
+    }
+
+    #[test]
+    fn test_explore_ei_class_suffix_filter() {
+        let result = explore("пизд", Some("е")).expect("пизд should be valid");
+        for vf in &result.forms {
+            assert_eq!(vf.suffix_val, "е", "All forms should have -е- suffix");
+        }
     }
 }

@@ -28,9 +28,15 @@ pub enum Attestation {
 #[derive(Clone, Copy, Debug)]
 pub struct RootData {
     pub name: &'static str,
+    /// Value used in form construction (e.g., "ср" for root "сра").
+    /// Usually the same as `name`, but may differ for roots where the
+    /// surface form includes a thematic vowel.
+    pub val: &'static str,
     pub gloss: Option<&'static str>,
     /// Indices into the SUFFIXES table that this root can combine with.
     pub suffix_indices: &'static [usize],
+    /// Linguistic note (2-4 sentences in Russian) for the random subcommand.
+    pub linguistic_note: &'static str,
 }
 
 /// A single verb form combining a prefix, root, suffix, and ending.
@@ -194,6 +200,12 @@ const SUFFIXES: &[SuffixEntry] = &[
         display: "-ну-",
         gloss: "однократный",
     },
+    // 2
+    SuffixEntry {
+        val: "е",
+        display: "-е-/-и-",
+        gloss: "II спряжения",
+    },
 ];
 
 pub fn suffix_val(idx: usize) -> &'static str {
@@ -223,12 +235,12 @@ const ENDINGS: &[EndingEntry] = &[
     // 0: infinitive
     EndingEntry {
         val: "ть",
-        applicable_to: &[0, 1],
+        applicable_to: &[0, 1, 2],
     },
     // 1: past masculine singular
     EndingEntry {
         val: "л",
-        applicable_to: &[0, 1],
+        applicable_to: &[0, 1, 2],
     },
     // 2: present 3sg
     EndingEntry {
@@ -239,6 +251,11 @@ const ENDINGS: &[EndingEntry] = &[
     EndingEntry {
         val: "нёт",
         applicable_to: &[1],
+    },
+    // 4: present 3sg (-ит for -е-/-и-)
+    EndingEntry {
+        val: "ит",
+        applicable_to: &[2],
     },
 ];
 
@@ -261,11 +278,92 @@ pub fn endings_for_suffix(suffix_idx: usize) -> Vec<usize> {
 // ---------------------------------------------------------------------------
 
 /// Root data for the walking skeleton.
-const ROOTS: &[RootData] = &[RootData {
-    name: "еб",
-    gloss: Some("fuck, copulate"),
-    suffix_indices: &[0, 1], // -а- and -ну-
-}];
+///
+/// NS intuition, 2026-07 — Attestation levels are native-speaker intuition, not corpus-grounded.
+const ROOTS: &[RootData] = &[
+    RootData {
+        name: "еб",
+        val: "еб",
+        gloss: Some("fuck, copulate"),
+        suffix_indices: &[0, 1], // -а- and -ну-
+        linguistic_note: "Самый продуктивный матерный корень. От праславянского *jebati. \
+            В современном русском образует более 100 глагольных и именных дериватов. \
+            Едва ли не каждое действие можно описать глаголом на еб-.",
+    },
+    RootData {
+        name: "сра",
+        val: "ср",
+        gloss: Some("shit, excrete"),
+        suffix_indices: &[0, 1], // -а- and -ну-
+        linguistic_note: "Скатологический корень. По классификации Плуцера-Сарно, \
+            относится к отдельному домену (не классический мат), но по продуктивности \
+            не уступает корню еб-. В современном русском образует десятки глагольных форм.",
+    },
+    RootData {
+        name: "сса",
+        val: "сс",
+        gloss: Some("piss, urinate"),
+        suffix_indices: &[0, 1], // -а- and -ну-
+        linguistic_note: "Скатологический корень 'мочиться'. Менее продуктивен, чем сра-, \
+            но образует ряд ярких метафор: зассать ('испугаться'), \
+            обоссать ('раскритиковать').",
+    },
+    RootData {
+        name: "пизд",
+        val: "пизд",
+        gloss: Some("female genitals (cunt)"),
+        suffix_indices: &[2, 1], // -е-/-и- (пиздеть) and -ну- (пиздануть)
+        linguistic_note: "Женский корень мата. Образует два семантических ряда: \
+            'говорить ерунду' (пиздеть, класс -е-) и 'бить/красть' (пиздить, класс -и-). \
+            Один из немногих корней с двумя продуктивными глагольными классами.",
+    },
+    RootData {
+        name: "хуй",
+        val: "хуй",
+        gloss: Some("penis (dick)"),
+        suffix_indices: &[1], // -ну- only; хуярить (class -и-) deferred
+        linguistic_note: "Ключевой именной корень русского мата. Этимология спорна: \
+            от праиндоевропейского *ks-u- (хвоя), монгольского khui, или латинского huic. \
+            Первый том словаря Плуцера-Сарно (500+ стр.) посвящён исключительно этому корню.",
+    },
+    RootData {
+        name: "бляд",
+        val: "бляд",
+        gloss: Some("whore, prostitute"),
+        suffix_indices: &[2], // -е-/-и- (блядеть); -ова- deferred
+        linguistic_note: "От древнерусского блѧдь — 'обман, ерунда, прелюбодейка'. \
+            Преимущественно именной корень (блядь, блядский, блядство). \
+            Глагольные формы (блядовать) используют суффикс -ова-, не включённый \
+            в текущую версию движка.",
+    },
+    RootData {
+        name: "муд",
+        val: "муд",
+        gloss: Some("testicles"),
+        suffix_indices: &[0], // -а- class (approximate; actual forms use -и-)
+        linguistic_note: "Корень со значением 'testiculi'. В современном русском \
+            глагольные формы (мудить) означают 'медлить, заниматься ерундой'. \
+            Преимущественно именной: мудак, мудило.",
+    },
+    RootData {
+        name: "манд",
+        val: "манд",
+        gloss: Some("female genitals (archaic)"),
+        suffix_indices: &[], // verb forms minimal; noun root
+        linguistic_note: "Архаичный корень со значением 'женские гениталии'. \
+            В XIX веке — одно из сильнейших ругательств. К XXI веку практически \
+            утратил обсценную силу. Глагольные формы (мандить) крайне редки.",
+    },
+    RootData {
+        name: "елд",
+        val: "елд",
+        gloss: Some("penis (archaic)"),
+        suffix_indices: &[], // verb forms minimal; noun root
+        linguistic_note: "Архаичный корень со значением 'мужской член'. \
+            Как и манд-, практически утратил обсценную силу в современном языке. \
+            Глагольные формы (елдить) маргинальны.",
+    },
+];
 
 pub fn root_data(name: &str) -> Option<&'static RootData> {
     ROOTS.iter().find(|r| r.name == name)
@@ -322,10 +420,150 @@ const ROOT_EB_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
     (8, 1, Attestation::Rare, Some("пробить, проломить")),
 ];
 
+// ---------------------------------------------------------------------------
+// Attestation: root сра-
+// ---------------------------------------------------------------------------
+
+const ROOT_SRA_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -а- class
+    (0, 0, Attestation::Common, Some("испражняться")),
+    (1, 0, Attestation::Common, Some("извергнуть")),
+    (2, 0, Attestation::Possible, None),
+    (3, 0, Attestation::Common, Some("загрязнить, испортить")),
+    (4, 0, Attestation::Possible, None),
+    (5, 0, Attestation::Common, Some("причинить неприятности")),
+    (6, 0, Attestation::Rare, Some("выбраниться; отделаться")),
+    (7, 0, Attestation::Rare, Some("переполнить, перенервничать")),
+    (8, 0, Attestation::Common, Some("упустить, потерять")),
+    // -ну- class
+    (0, 1, Attestation::Rare, Some("однократно испражниться")),
+    (3, 1, Attestation::Possible, None),
+    (5, 1, Attestation::Possible, None),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root сса-
+// ---------------------------------------------------------------------------
+
+const ROOT_SSA_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -а- class
+    (0, 0, Attestation::Common, Some("мочиться")),
+    (1, 0, Attestation::Possible, None),
+    (2, 0, Attestation::Possible, None),
+    (3, 0, Attestation::Common, Some("испугаться")),
+    (4, 0, Attestation::Possible, None),
+    (5, 0, Attestation::Common, Some("наполнить мочой")),
+    (6, 0, Attestation::Rare, Some("отделаться страхом")),
+    (7, 0, Attestation::Possible, None),
+    (8, 0, Attestation::Common, Some("опоздать, упустить")),
+    // -ну- class
+    (0, 1, Attestation::Rare, Some("помочиться однократно")),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root пизд-
+// ---------------------------------------------------------------------------
+
+const ROOT_PIZD_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -е-/-и- class (пиздеть type)
+    (0, 2, Attestation::Common, Some("говорить ерунду")),
+    (2, 2, Attestation::Rare, Some("договориться до абсурда")),
+    (3, 2, Attestation::Common, Some("начать врать")),
+    (4, 2, Attestation::Possible, None),
+    (8, 2, Attestation::Common, Some("проболтаться; пропустить")),
+    // -ну- class (пиздануть)
+    (0, 1, Attestation::Common, Some("ударить; соврать")),
+    (3, 1, Attestation::Rare, Some("ударить с силой")),
+    (5, 1, Attestation::Possible, None),
+    (8, 1, Attestation::Rare, Some("пробить насквозь")),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root хуй-
+// ---------------------------------------------------------------------------
+
+const ROOT_KHUY_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -ну- class
+    (0, 1, Attestation::Common, Some("ударить")),
+    (1, 1, Attestation::Possible, None),
+    (2, 1, Attestation::Possible, None),
+    (3, 1, Attestation::Common, Some("забить, пренебречь")),
+    (4, 1, Attestation::Possible, None),
+    (5, 1, Attestation::Rare, Some("навредить")),
+    (6, 1, Attestation::Possible, None),
+    (7, 1, Attestation::Possible, None),
+    (8, 1, Attestation::Rare, Some("промахнуться")),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root бляд-
+// ---------------------------------------------------------------------------
+
+const ROOT_BLYAD_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -е-/-и- class
+    (
+        0,
+        2,
+        Attestation::Rare,
+        Some("говорить 'блядь' как слово-паразит"),
+    ),
+    (3, 2, Attestation::Rare, Some("начать материться")),
+    (5, 2, Attestation::Possible, None),
+    (
+        8,
+        2,
+        Attestation::Common,
+        Some("провести время в распутстве; потратить зря"),
+    ),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root муд-
+// ---------------------------------------------------------------------------
+
+const ROOT_MUD_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // -а- class (approximate; actual forms use -и- theme: мудить, намудить, etc.)
+    (0, 0, Attestation::Common, Some("медлить, делать ерунду")),
+    (1, 0, Attestation::Possible, None),
+    (2, 0, Attestation::Possible, None),
+    (3, 0, Attestation::Rare, Some("задержать, затянуть")),
+    (4, 0, Attestation::Possible, None),
+    (5, 0, Attestation::Common, Some("наделать глупостей")),
+    (6, 0, Attestation::Rare, Some("отделаться")),
+    (7, 0, Attestation::Rare, Some("перестараться")),
+    (8, 0, Attestation::Possible, None),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root манд-
+// ---------------------------------------------------------------------------
+
+const ROOT_MAND_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // Verb forms essentially nonexistent; preserved for completeness
+    (
+        0,
+        0,
+        Attestation::Rare,
+        Some("совершать половой акт (арх.)"),
+    ),
+];
+
+// ---------------------------------------------------------------------------
+// Attestation: root елд-
+// ---------------------------------------------------------------------------
+
+const ROOT_ELD_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
+    // Verb forms essentially nonexistent; preserved for completeness
+    (0, 0, Attestation::Rare, Some("заниматься ерундой (арх.)")),
+];
+
 /// Lookup attestation and note for a given root, prefix index, and suffix index.
 ///
 /// Returns `(Attestation, Option<note>)`. Unlisted combinations default to
 /// (Possible, None) — linguistically honest: unattested ≠ impossible.
+///
+/// NS intuition, 2026-07 — All levels are marked as native-speaker intuition,
+/// not corpus-grounded. See docs/architecture.md for the attestation model.
 pub fn lookup_attestation(
     root: &str,
     prefix_idx: usize,
@@ -333,6 +571,46 @@ pub fn lookup_attestation(
 ) -> (Attestation, Option<&'static str>) {
     match root {
         "еб" => ROOT_EB_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "сра" => ROOT_SRA_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "сса" => ROOT_SSA_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "пизд" => ROOT_PIZD_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "хуй" => ROOT_KHUY_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "бляд" => ROOT_BLYAD_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "муд" => ROOT_MUD_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "манд" => ROOT_MAND_ATTEST
+            .iter()
+            .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
+            .map(|(_, _, a, n)| (*a, *n))
+            .unwrap_or((Attestation::Possible, None)),
+        "елд" => ROOT_ELD_ATTEST
             .iter()
             .find(|(p, s, _, _)| *p == prefix_idx && *s == suffix_idx)
             .map(|(_, _, a, n)| (*a, *n))
@@ -452,12 +730,158 @@ mod tests {
     }
 
     #[test]
-    fn test_endings_for_suffix_nu() {
-        let endings = endings_for_suffix(1);
-        // -ну- suffix has 3 endings: ть, л, нёт
-        assert!(endings.contains(&0)); // ть
-        assert!(endings.contains(&1)); // л
-        assert!(endings.contains(&3)); // нёт
+    fn test_endings_for_suffix_ei() {
+        let endings = endings_for_suffix(2);
+        // -е-/-и- suffix has 3 endings: ть, л, ит
+        assert!(endings.contains(&0)); // ть (infinitive → еть)
+        assert!(endings.contains(&1)); // л (past → ел)
+        assert!(endings.contains(&4)); // ит (present 3sg)
         assert_eq!(endings.len(), 3);
+    }
+
+    #[test]
+    fn test_root_data_sra() {
+        let rd = root_data("сра").expect("сра should be a known root");
+        assert_eq!(rd.name, "сра");
+        assert_eq!(rd.val, "ср");
+        assert_eq!(rd.gloss, Some("shit, excrete"));
+    }
+
+    #[test]
+    fn test_root_data_ssa() {
+        let rd = root_data("сса").expect("сса should be a known root");
+        assert_eq!(rd.name, "сса");
+        assert_eq!(rd.val, "сс");
+    }
+
+    #[test]
+    fn test_root_data_pizd() {
+        let rd = root_data("пизд").expect("пизд should be a known root");
+        assert_eq!(rd.name, "пизд");
+        assert!(rd.suffix_indices.contains(&2));
+        assert!(rd.suffix_indices.contains(&1));
+    }
+
+    #[test]
+    fn test_root_data_khuy() {
+        let rd = root_data("хуй").expect("хуй should be a known root");
+        assert_eq!(rd.name, "хуй");
+        assert_eq!(rd.suffix_indices, &[1]);
+    }
+
+    #[test]
+    fn test_root_data_blyad() {
+        let rd = root_data("бляд").expect("бляд should be a known root");
+        assert_eq!(rd.name, "бляд");
+    }
+
+    #[test]
+    fn test_root_data_mud() {
+        let rd = root_data("муд").expect("муд should be a known root");
+        assert_eq!(rd.name, "муд");
+    }
+
+    #[test]
+    fn test_root_data_mand() {
+        let rd = root_data("манд").expect("манд should be a known root");
+        assert_eq!(rd.name, "манд");
+        assert!(rd.suffix_indices.is_empty());
+    }
+
+    #[test]
+    fn test_root_data_eld() {
+        let rd = root_data("елд").expect("елд should be a known root");
+        assert_eq!(rd.name, "елд");
+        assert!(rd.suffix_indices.is_empty());
+    }
+
+    #[test]
+    fn test_all_roots_contains_all() {
+        for name in &[
+            "еб", "сра", "сса", "пизд", "хуй", "бляд", "муд", "манд", "елд",
+        ] {
+            assert!(
+                all_roots().iter().any(|r| r.name == *name),
+                "all_roots should contain '{}'",
+                name
+            );
+        }
+    }
+
+    #[test]
+    fn test_all_roots_has_9() {
+        assert_eq!(all_roots().len(), 9);
+    }
+
+    #[test]
+    fn test_lookup_attestation_sra_common() {
+        let (att, note) = lookup_attestation("сра", 0, 0);
+        assert_eq!(att, Attestation::Common);
+        assert_eq!(note, Some("испражняться"));
+    }
+
+    #[test]
+    fn test_lookup_attestation_ssa_common() {
+        let (att, note) = lookup_attestation("сса", 0, 0);
+        assert_eq!(att, Attestation::Common);
+        assert_eq!(note, Some("мочиться"));
+    }
+
+    #[test]
+    fn test_lookup_attestation_pizd_ei() {
+        let (att, note) = lookup_attestation("пизд", 0, 2);
+        assert_eq!(att, Attestation::Common);
+        assert_eq!(note, Some("говорить ерунду"));
+    }
+
+    #[test]
+    fn test_lookup_attestation_khuy_nu() {
+        let (att, note) = lookup_attestation("хуй", 0, 1);
+        assert_eq!(att, Attestation::Common);
+        assert_eq!(note, Some("ударить"));
+    }
+
+    #[test]
+    fn test_lookup_attestation_blyad_ei() {
+        let (att, _note) = lookup_attestation("бляд", 0, 2);
+        assert_eq!(att, Attestation::Rare);
+    }
+
+    #[test]
+    fn test_lookup_attestation_mud_common() {
+        let (att, note) = lookup_attestation("муд", 0, 0);
+        assert_eq!(att, Attestation::Common);
+        assert_eq!(note, Some("медлить, делать ерунду"));
+    }
+
+    #[test]
+    fn test_lookup_attestation_mand_possible() {
+        // манд has very limited verb forms; unknown prefix×suffix should be Possible
+        let (att, _note) = lookup_attestation("манд", 3, 1);
+        assert_eq!(att, Attestation::Possible);
+    }
+
+    #[test]
+    fn test_lookup_attestation_eld_possible() {
+        let (att, _note) = lookup_attestation("елд", 5, 0);
+        assert_eq!(att, Attestation::Possible);
+    }
+
+    #[test]
+    fn test_all_roots_have_linguistic_notes() {
+        for rd in all_roots() {
+            assert!(
+                !rd.linguistic_note.is_empty(),
+                "Root '{}' should have a linguistic note",
+                rd.name
+            );
+        }
+    }
+
+    #[test]
+    fn test_all_roots_have_val() {
+        for rd in all_roots() {
+            assert!(!rd.val.is_empty(), "Root '{}' should have a val", rd.name);
+        }
     }
 }

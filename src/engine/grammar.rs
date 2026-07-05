@@ -22,6 +22,10 @@ const SUFFIX_ENDING_TABLE: &[(&str, &str, &str)] = &[
     ("ну", "ть", "нуть"),
     ("ну", "л", "нул"),
     ("ну", "нёт", "нёт"),
+    // -е-/-и- class (class II): е → и in present 3sg
+    ("е", "ть", "еть"),
+    ("е", "л", "ел"),
+    ("е", "ит", "ит"),
 ];
 
 /// Combine suffix value and ending value into the actual suffix+ending string.
@@ -160,5 +164,61 @@ mod tests {
     fn test_build_form_pro_ebal() {
         // Past: про- + еб- + а- + л
         assert_eq!(build_form("про", "еб", "а", "л"), "проебал");
+    }
+
+    // -е-/-и- class tests
+
+    #[test]
+    fn test_build_form_pizdet() {
+        // пизд- + е- + ть → пиздеть
+        assert_eq!(build_form("", "пизд", "е", "ть"), "пиздеть");
+    }
+
+    #[test]
+    fn test_build_form_zapizdel() {
+        // за- + пизд- + е- + л → запиздел
+        assert_eq!(build_form("за", "пизд", "е", "л"), "запиздел");
+    }
+
+    #[test]
+    fn test_build_form_pizdit() {
+        // пизд- + (е→и) + т → пиздит (present 3sg)
+        assert_eq!(build_form("", "пизд", "е", "ит"), "пиздит");
+    }
+
+    #[test]
+    fn test_build_form_propizdit() {
+        // про- + пизд- + (е→и) + т → пропиздит
+        assert_eq!(build_form("про", "пизд", "е", "ит"), "пропиздит");
+    }
+
+    #[test]
+    fn test_build_form_blyadet() {
+        // бляд- + е- + ть → блядеть
+        assert_eq!(build_form("", "бляд", "е", "ть"), "блядеть");
+    }
+
+    #[test]
+    fn test_build_form_srat() {
+        // ср- + а- + ть → срать (root val "ср" for name "сра")
+        assert_eq!(build_form("", "ср", "а", "ть"), "срать");
+    }
+
+    #[test]
+    fn test_build_form_ssat() {
+        // сс- + а- + ть → ссать (root val "сс" for name "сса")
+        assert_eq!(build_form("", "сс", "а", "ть"), "ссать");
+    }
+
+    #[test]
+    fn test_build_form_khuyanut() {
+        // хуй- + ну- + ть → хуйнуть
+        assert_eq!(build_form("", "хуй", "ну", "ть"), "хуйнуть");
+    }
+
+    #[test]
+    fn test_build_form_zakhuyanut() {
+        // за- + хуй- + ну- + ть → захуйнуть
+        assert_eq!(build_form("за", "хуй", "ну", "ть"), "захуйнуть");
     }
 }

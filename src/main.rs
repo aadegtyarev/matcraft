@@ -38,6 +38,9 @@ enum Commands {
     /// Список доступных корней
     #[command(name = "list-roots")]
     ListRoots,
+
+    /// Случайный корень с лингвистической заметкой
+    Random,
 }
 
 fn main() {
@@ -84,6 +87,28 @@ fn main() {
 
         Commands::ListRoots => {
             let output = engine::display::format_list_roots();
+            println!("{output}");
+        }
+
+        Commands::Random => {
+            let rd = engine::random_root();
+            // Get sample forms: filter for infinitive (ending "ть") with Common attestation
+            let samples: Vec<String> = if let Ok(result) = engine::explore(rd.name, None) {
+                result
+                    .forms
+                    .iter()
+                    .filter(|f| {
+                        f.ending_val == "ть"
+                            && f.attestation == engine::morpheme::Attestation::Common
+                    })
+                    .take(3)
+                    .map(|f| f.form.clone())
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
+            let output = engine::display::format_random(rd, &sample_refs);
             println!("{output}");
         }
     }
