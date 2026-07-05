@@ -107,7 +107,7 @@ pub const ROOT_GOVN_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
         11,
         3,
         Attestation::Common,
-        Some("обговнить; очернить/опозорить"),
+        Some("оговнить; очернить/опозорить"),
     ),
 ];
 
