@@ -3,4 +3,4 @@ pub mod grammar;
 pub mod morpheme;
 pub mod paradigm;
 
-pub use paradigm::{explore, generate};
+pub use paradigm::{explore, generate, random_root};

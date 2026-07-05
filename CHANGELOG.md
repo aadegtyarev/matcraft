@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-07-05
+
+### Added
+
+- **Root expansion from 1 to 9 roots.** Added 8 new roots: сра-, сса-, пизд-, хуй-,
+  бляд-, муд-, манд-, елд-. Each with attestation data, meaning notes, and
+  linguistic notes for the `random` subcommand.
+- **New suffix class: -е-/-и- (class II).** Supports verbs with -еть/-ить theme
+  (e.g., пиздеть, блядеть). Three endings: infinitive -еть, past m.sg -ел,
+  present 3sg -ит.
+- **`matcraft random` subcommand.** Prints a randomly selected root with its
+  gloss, suffix classes, sample formed words, and a linguistic note in a boxed
+  display.
+- Root `val` field in `RootData` struct enabling accurate form construction for
+  roots where the citation form differs from the stem (e.g., сра- vs stem ср-).
+
+### Changed
+
+- `RootData` now includes `val` and `linguistic_note` fields.
+- Suffix table extended to 3 entries, ending table extended to 5 entries.
+- `format_explore` handles roots with no verb forms (e.g., манд-, елд-) with
+  a descriptive message.
+- Version bumped to 0.4.0.
+
+### Documentation
+
+- `README.md`: added "Источники" section citing Plutser-Sarno and native speaker
+  intuition methodology.
+- `docs/architecture.md`: updated root inventory table to 9 entries, added
+  -е-/-и- suffix class section, updated module map.
+
 ## [0.3.0] — 2026-07-05
 
 ### Changed
