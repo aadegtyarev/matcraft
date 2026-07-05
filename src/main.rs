@@ -24,7 +24,7 @@ enum Commands {
         root: String,
 
         /// Фильтр по суффиксу (например, -ну-)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         suffix: Option<String>,
     },
 
@@ -88,6 +88,17 @@ fn main() {
             }
 
             let forms = engine::generate(cli.mode, root_name, count);
+
+            // A valid noun-only root yields an empty verbal pool. That is valid
+            // input, not an error: report it on stdout and exit 0. Only fires for
+            // an explicit `--root` — the no-root random pool is never empty.
+            if forms.is_empty() {
+                if let Some(r) = root_name {
+                    println!("именной корень «{r}-»: глагольных форм нет");
+                }
+                return;
+            }
+
             for form in forms {
                 println!("{form}");
             }
