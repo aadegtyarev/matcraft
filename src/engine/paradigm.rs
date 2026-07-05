@@ -137,7 +137,7 @@ pub fn generate(mode: Mode, root_name: Option<&str>, count: usize) -> Vec<String
 
     pool.shuffle(&mut rng);
 
-    // Sample without replacement, cycling if count exceeds pool size
+    // Cycle through the shuffled pool when count exceeds pool size
     let mut result = Vec::with_capacity(count);
     for i in 0..count {
         result.push(pool[i % pool.len()].clone());

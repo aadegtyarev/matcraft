@@ -182,7 +182,7 @@ struct PrefixEntry {
     allomorphs: &'static [&'static str],
 }
 
-/// All prefixes for the walking skeleton.
+/// All prefixes in the inventory.
 ///
 /// Index positions are load-bearing — attestation tables reference them by index.
 const PREFIXES: &[PrefixEntry] = &[
@@ -310,7 +310,7 @@ struct SuffixEntry {
     gloss: &'static str,
 }
 
-/// Suffix classes for the walking skeleton.
+/// Suffix classes in the inventory.
 const SUFFIXES: &[SuffixEntry] = &[
     // 0
     SuffixEntry {
@@ -372,7 +372,7 @@ struct EndingEntry {
     applicable_to: &'static [usize],
 }
 
-/// Endings for the walking skeleton.
+/// Verb endings by class.
 const ENDINGS: &[EndingEntry] = &[
     // 0: infinitive
     EndingEntry {
@@ -452,7 +452,7 @@ pub fn select_prefix_allomorph<'a>(
             } else {
                 "рас"
             };
-            // из-/ис- has the special case for root "еб"
+            // из-/ис- uses ис- before any е/ё-starting root (effectively only еб- in the current inventory)
             if prefix_val == "из" && matches!(first, 'е' | 'ё') {
                 return "ис";
             }

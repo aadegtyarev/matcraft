@@ -238,7 +238,7 @@ pub const ROOT_KHAR_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
         Attestation::Rare,
         Some("нахарить; совершить мн. актов"),
     ),
-    (8, 3, Attestation::Common, Some("прокарить насквозь")),
+    (8, 3, Attestation::Common, Some("прохарить насквозь")),
     (11, 3, Attestation::Rare, Some("охарить; обмануть")),
     (
         15,

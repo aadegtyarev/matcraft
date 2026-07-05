@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] — 2026-07-05
+
+### Fixed
+
+- Attestation notes now match the engine-built form (`прохарить`, `оговнить` — were
+  `прокарить`/`обговнить`). Honesty fix, no behavior change.
+- `random` / `root-of-the-day` output box is now aligned for every root (long content
+  lines are wrapped; previously the frame burst for noun-only roots and was off by one).
+- Documentation currency: threat model lists all five subcommands; stale "walking skeleton"
+  phase labels and an outdated root-count figure removed. (v0.6.0 audit fixes)
+
 ## [0.6.0] — 2026-07-05
 
 ### Added

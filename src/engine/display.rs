@@ -256,8 +256,26 @@ fn domain_inline(domain: Domain) -> &'static str {
 pub fn format_random(rd: &RootData, sample_forms: &[&str]) -> String {
     let mut out = String::new();
 
-    // Box width: 44 chars (2 border + 40 content + 2 spaces)
+    // Box width: 46 chars total. The content field is `content_width` chars; the
+    // border row is `content_width + 4` (2 frame chars + 2 padding). A content row
+    // is `║` + 2 leading spaces + a field padded to `content_width + 1` + 1 trailing
+    // space + `║` = 1 + 2 + (content_width + 1) + 1 + 1 = content_width + 6, matching
+    // the border. Every content line is wrapped at `content_width` so nothing longer
+    // than the field overflows the frame (the note, name, suffix, and example lines
+    // alike).
     let content_width = 40;
+
+    // Push a content line (or lines), wrapping at the field width so no text
+    // overflows the frame.
+    let push_content = |out: &mut String, text: &str| {
+        for line in wrap_text(text, content_width) {
+            out.push_str(&format!(
+                "║  {:<width$} ║\n",
+                line,
+                width = content_width + 1
+            ));
+        }
+    };
 
     // Top border
     out.push_str(&format!("╔{}╗\n", "═".repeat(content_width + 4)));
@@ -265,11 +283,7 @@ pub fn format_random(rd: &RootData, sample_forms: &[&str]) -> String {
     // Root name line
     let gloss_str = rd.gloss.map(|g| format!("'{}'", g)).unwrap_or_default();
     let name_line = format!("Корень: {}-  {}", rd.name, gloss_str);
-    out.push_str(&format!(
-        "║  {:<width$} ║\n",
-        name_line,
-        width = content_width + 2
-    ));
+    push_content(&mut out, &name_line);
 
     // Separator
     out.push_str(&format!("╠{}╣\n", "═".repeat(content_width + 4)));
@@ -285,54 +299,28 @@ pub fn format_random(rd: &RootData, sample_forms: &[&str]) -> String {
     } else {
         suffix_strs.join(", ")
     };
-    let suffix_line = format!("Суффиксальные классы: {}", suffix_classes);
-    out.push_str(&format!(
-        "║  {:<width$} ║\n",
-        suffix_line,
-        width = content_width + 2
-    ));
+    push_content(
+        &mut out,
+        &format!("Суффиксальные классы: {}", suffix_classes),
+    );
 
     // Sample forms
     if sample_forms.is_empty() && rd.suffix_indices.is_empty() {
-        out.push_str(&format!(
-            "║  {:<width$} ║\n",
-            "Примеры: именной корень (нет глагольных форм)",
-            width = content_width + 2
-        ));
+        push_content(&mut out, "Примеры: именной корень (нет глагольных форм)");
     } else if sample_forms.is_empty() {
-        out.push_str(&format!(
-            "║  {:<width$} ║\n",
-            "Примеры: не указаны",
-            width = content_width + 2
-        ));
+        push_content(&mut out, "Примеры: не указаны");
     } else {
-        let examples = format!("Примеры: {}", sample_forms.join(", "));
-        out.push_str(&format!(
-            "║  {:<width$} ║\n",
-            examples,
-            width = content_width + 2
-        ));
+        push_content(&mut out, &format!("Примеры: {}", sample_forms.join(", ")));
     }
 
     // Blank line
     out.push_str(&format!("║{:<width$}║\n", "", width = content_width + 4));
 
     // Linguistic note header
-    out.push_str(&format!(
-        "║  {:<width$} ║\n",
-        "Заметка:",
-        width = content_width + 2
-    ));
+    push_content(&mut out, "Заметка:");
 
     // Wrap and print the note
-    let wrapped = wrap_text(rd.linguistic_note, content_width);
-    for line in &wrapped {
-        out.push_str(&format!(
-            "║  {:<width$} ║\n",
-            line,
-            width = content_width + 2
-        ));
-    }
+    push_content(&mut out, rd.linguistic_note);
 
     // Bottom border
     out.push_str(&format!("╚{}╝\n", "═".repeat(content_width + 4)));
@@ -558,6 +546,33 @@ mod tests {
             output.contains("именной корень"),
             "Noun-only root should show noun-only message"
         );
+    }
+
+    #[test]
+    fn test_format_random_box_lines_equal_width() {
+        // The box is only aligned if every rendered line — top/bottom border,
+        // separator, blank line, and all content lines — has the same char count.
+        // This pins the box arithmetic against regression; the `contains`-based
+        // tests above never check width. Both the empty-samples branch (whose
+        // "именной корень" message is longer than the field) and the populated
+        // branch are exercised, across noun-only and verb roots.
+        for name in ["еб", "манд", "хуй", "сиповк", "говн", "хар", "елд"] {
+            let rd = root_data(name).unwrap();
+            for samples in [Vec::new(), vec!["ебать", "ебнуть"]] {
+                let output = format_random(rd, &samples);
+                let widths: Vec<usize> = output
+                    .lines()
+                    .filter(|l| !l.is_empty())
+                    .map(|l| l.chars().count())
+                    .collect();
+                let first = widths[0];
+                assert!(
+                    widths.iter().all(|&w| w == first),
+                    "all box lines must share one width for root {name} \
+                     (samples={samples:?}): got {widths:?}"
+                );
+            }
+        }
     }
 
     #[test]
