@@ -9,8 +9,12 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: rustfmt, clippy
-      - run: cargo fmt -- --check
-      - run: cargo build --all-targets
-      - run: cargo clippy -- -D warnings
-      - run: cargo test
-      - run: cargo doc --no-deps --document-private-items
+      # cargo-audit is a build-beat tool in .ai-dev/quality/tools.json but is not a
+      # cargo built-in and is not a toolchain component — install its prebuilt binary
+      # so the wholesale runner below can execute the audit row.
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      # Run EVERY build-beat check from the registry — tools.json is the single home
+      # for "what green means"; CI no longer hardcodes a subset (issue #16).
+      - run: node .ai-dev/quality/run.mjs build
