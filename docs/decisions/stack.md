@@ -1,67 +1,70 @@
-# Stack decision
+# Решение по стеку
 
-## Problem
+## Проблема
 
-Choose a programming language and toolchain for implementing matcraft — an
-offline CLI tool that generates Russian obscene language by morphological rules.
+Выбрать язык программирования и инструментарий для реализации matcraft —
+офлайн CLI-инструмента, который генерирует русскую обсценную лексику по
+морфологическим правилам.
 
-## Alternatives considered
+## Рассмотренные альтернативы
 
 ### Rust
 
-- **Unicode / Cyrillic:** Native UTF-8 support; `\p{Cyrillic}` in regex.
-- **Tool distribution:** `cargo install` produces a standalone binary with no
-  runtime dependency.
-- **Morphology ecosystem:** No existing generation crate exists — must be custom.
-- **CLI ergonomics:** clap 4 (derive) — mature, widely used.
-- **Binary size:** ~5 MB (stripped).
-- **Cross-platform:** Linux, macOS, Windows.
+- **Unicode / кириллица:** нативная поддержка UTF-8; `\p{Cyrillic}` в регулярных
+  выражениях.
+- **Распространение инструмента:** `cargo install` даёт самодостаточный бинарь без
+  зависимости от рантайма.
+- **Экосистема морфологии:** готового крейта для генерации нет — придётся писать
+  свой.
+- **Эргономика CLI:** clap 4 (derive) — зрелый, широко используемый.
+- **Размер бинаря:** ~5 MB (после strip).
+- **Кроссплатформенность:** Linux, macOS, Windows.
 
 ### Python
 
-- **Unicode / Cyrillic:** Native UTF-8, good support.
-- **Tool distribution:** `pip install` — requires Python + venv on the target
-  system.
-- **Morphology ecosystem:** pymorphy2 is an *analysis* library (tagging,
-  lemmatization), not a *generation* engine. No help for this use case.
-- **CLI ergonomics:** argparse / click — mature.
-- **Binary size:** N/A (script, no standalone binary).
-- **Cross-platform:** Linux, macOS, Windows.
+- **Unicode / кириллица:** нативный UTF-8, хорошая поддержка.
+- **Распространение инструмента:** `pip install` — требует Python + venv на целевой
+  системе.
+- **Экосистема морфологии:** pymorphy2 — библиотека *анализа* (разметка,
+  лемматизация), а не движок *генерации*. Для этого сценария бесполезна.
+- **Эргономика CLI:** argparse / click — зрелые.
+- **Размер бинаря:** неприменимо (скрипт, самодостаточного бинаря нет).
+- **Кроссплатформенность:** Linux, macOS, Windows.
 
-### Key research finding
+### Ключевой вывод исследования
 
-Neither language has a crate or library that implements generation of Russian
-mat by morphological rules. The implementation would be novel either way. The
-morphological rules for mat are well-documented academically (4 roots, ~14
-prefixes, ~5 suffixes, interfixes, postfix -ся) and are simple enough (finite
-combinatorial rules, not ML) that either language works.
+Ни в одном из языков нет крейта или библиотеки, реализующей генерацию русского
+мата по морфологическим правилам. Реализация в любом случае была бы новой.
+Морфологические правила мата хорошо описаны в академической литературе (4 корня,
+~14 префиксов, ~5 суффиксов, интерфиксы, постфикс -ся) и достаточно просты
+(конечные комбинаторные правила, не ML), так что подходит любой язык.
 
-## Recommendation
+## Рекомендация
 
-**Rust.** The deciding factors:
+**Rust.** Решающие факторы:
 
-1. **Standalone binary distribution** matches the "offline CLI tool" spec
-   without a Python runtime dependency.
-2. **Finite, well-understood rule set** — Rust's compile-time checks and
-   pattern matching are a net benefit for correctness.
-3. **Ecosystem maturity** — clap 4 and rand are battle-tested dependencies.
+1. **Распространение самодостаточным бинарём** соответствует спецификации
+   «офлайн CLI-инструмент» без зависимости от рантайма Python.
+2. **Конечный, хорошо изученный набор правил** — проверки на этапе компиляции и
+   сопоставление с образцом в Rust дают чистый выигрыш для корректности.
+3. **Зрелость экосистемы** — clap 4 и rand — проверенные временем зависимости.
 
-### Edition
+### Редакция (edition)
 
-Rust edition 2024 (stable since Rust 1.85.0, Feb 2025). Current stable
-toolchain (1.96.0, May 2026) fully supports it.
+Rust edition 2024 (стабильна с Rust 1.85.0, февраль 2025). Текущий стабильный
+toolchain (1.96.0, май 2026) полностью её поддерживает.
 
-### Dependencies
+### Зависимости
 
-| Crate | Version | Purpose |
+| Крейт | Версия | Назначение |
 | --- | --- | --- |
-| `clap` | `4.6` (with `derive` feature) | CLI argument parsing |
-| `rand` | `0.9` | Random morpheme selection |
+| `clap` | `4.6` (с feature `derive`) | Разбор аргументов CLI |
+| `rand` | `0.9` | Случайный выбор морфем |
 
-## Decision
+## Решение
 
-**Operator:** Alexander Degtyarev
+**Оператор:** Alexander Degtyarev
 
-**Date:** 2026-07-05
+**Дата:** 2026-07-05
 
-**Decision:** Use Rust with edition 2024, clap 4.6 (derive), rand 0.9.
+**Решение:** использовать Rust с edition 2024, clap 4.6 (derive), rand 0.9.
