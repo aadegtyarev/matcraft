@@ -1,6 +1,6 @@
 [package]
 name = "matcraft"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 rust-version = "1.85"
 description = "CLI-инструмент для исследования морфологической парадигмы русского мата"
@@ -9,3 +9,7 @@ license = "MIT"
 [dependencies]
 clap = { version = "4.6", features = ["derive"] }
 rand = "0.9"
+
+[dev-dependencies]
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
