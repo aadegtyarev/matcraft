@@ -103,11 +103,16 @@ pub const ROOT_GOVN_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
     ),
     (5, 3, Attestation::Rare, Some("наговнить; наделать дерьма")),
     (8, 3, Attestation::Rare, Some("провонять; обратить в говно")),
+    // §7 honesty: о-/об- is the preposition rule applied to the verbal prefix as a
+    // simplification (the engine builds о- before a consonant). The real colloquial
+    // derivative takes об- (обговнять/обгавнякать); Common for оговнить is unattested by
+    // the source → Possible, and the note is given as a meaning projection, not a real
+    // form. See docs/decisions/o-ob-allomorphy.md.
     (
         11,
         3,
-        Attestation::Common,
-        Some("оговнить; очернить/опозорить"),
+        Attestation::Possible,
+        Some("проекция значения 'очернить'; реальный дериват — обговнять (об-)"),
     ),
 ];
 
