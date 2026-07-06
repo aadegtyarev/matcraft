@@ -289,5 +289,15 @@ pub const ROOT_DRIST_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
     (0, 0, Attestation::Common, Some("страдать поносом")),
     (3, 0, Attestation::Rare, Some("задристать; испачкать")),
     (5, 0, Attestation::Rare, Some("надристать; нагадить")),
-    (11, 0, Attestation::Rare, Some("обдристать; обгадить")),
+    // §7 honesty: the engine builds одристать (о- before a consonant — the preposition
+    // rule as a simplification); the real form is обдристать(ся) via об-/обо-, which the
+    // engine cannot build (обо- is a known gap). The note is aligned to the built form and
+    // Rare→Possible (the simplified-rule form is unattested by the source). See
+    // docs/decisions/o-ob-allomorphy.md.
+    (
+        11,
+        0,
+        Attestation::Possible,
+        Some("одристать; реальная форма обдристать (об-/обо- — gap движка)"),
+    ),
 ];

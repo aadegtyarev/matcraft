@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] — 2026-07-06
+
+### Fixed
+
+- Attestation honesty: `оговнить` (говн-) and `одристать` (дрист-) are now `Possible`,
+  not `Common`/`Rare` — the engine builds these via a simplified о-/об- rule, and the
+  source does not attest the simplified forms (the real derivatives use об-/обо-). Notes
+  aligned to the built forms. No generated word string changed.
+
+### Documentation
+
+- Added `docs/decisions/o-ob-allomorphy.md` recording that the о-/об- prefix rule is the
+  preposition rule applied as a conscious simplification (the verbal prefix is irregular
+  allomorphy), and that the обо- allomorph is a known engine gap. (#24)
+
 ## [0.7.0] — 2026-07-06
 
 ### Added
