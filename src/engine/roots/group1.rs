@@ -11,6 +11,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "еб",
         val: "еб",
         gloss: Some("fuck, copulate"),
+        gloss_ru: Some("совокупляться"),
         suffix_indices: &[0, 1], // -а- and -ну-
         domain: Domain::Nuclear,
         productivity: ProductivityClass::A,
@@ -23,6 +24,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "пизд",
         val: "пизд",
         gloss: Some("female genitals (cunt)"),
+        gloss_ru: Some("женские гениталии"),
         suffix_indices: &[2, 1, 3], // -е- (пиздеть), -ну- (пиздануть), -и- (пиздить)
         domain: Domain::Nuclear,
         productivity: ProductivityClass::B,
@@ -35,6 +37,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "хуй",
         val: "хуй",
         gloss: Some("penis (dick)"),
+        gloss_ru: Some("мужской член"),
         suffix_indices: &[1], // -ну- (хуйнуть); хуять/хуячить требуют -j-, движком не строятся
         domain: Domain::Nuclear,
         productivity: ProductivityClass::C,
@@ -47,6 +50,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "бляд",
         val: "бляд",
         gloss: Some("whore, prostitute"),
+        gloss_ru: Some("проститутка; распутство"),
         suffix_indices: &[2], // -е- (блядеть); -ова- (блядовать) движком не строится
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
@@ -60,6 +64,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "муд",
         val: "муд",
         gloss: Some("testicles"),
+        gloss_ru: Some("яички"),
         suffix_indices: &[3], // -и- (мудить)
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
@@ -72,6 +77,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "манд",
         val: "манд",
         gloss: Some("female genitals (archaic)"),
+        gloss_ru: Some("женские гениталии (арх.)"),
         suffix_indices: &[], // verb forms marginal (единичные); treated as noun-only
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
@@ -84,6 +90,7 @@ pub const GROUP_1: &[RootData] = &[
         name: "елд",
         val: "елд",
         gloss: Some("penis (archaic)"),
+        gloss_ru: Some("мужской член (арх.)"),
         suffix_indices: &[], // purely nominal per source §3
         domain: Domain::Nuclear,
         productivity: ProductivityClass::E,

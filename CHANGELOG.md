@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] — 2026-07-06
+
+### Changed
+
+- **Research-grade output across all commands.** Every form is now shown as a full
+  breakdown block — attestation level, meaning, morpheme decomposition (приставка /
+  корень / суффикс / окончание, each glossed), domain·productivity, and a line
+  explaining *why* the attestation level. Output is fully Russian. (#29)
+  - `explore` — enriched table (endings as columns; past/present forms now visible)
+    with a morpheme legend; a `--suffix` filter adds full breakdown blocks.
+  - `generate` — one full breakdown block per form (**no longer one line per form** —
+    `generate | wc -l` output shape changed; there is no machine-output contract).
+  - `list-roots` — enriched per-root line (Russian gloss, domain, productivity, type,
+    a flag for verbal roots with no source-attested forms).
+  - `random` / `root-of-the-day` — enriched summary box + a breakdown block.
+
+### Added
+
+- `RootData.gloss_ru` (Russian root glosses, all 35) and ending labels/glosses.
+
+### Internal
+
+- `src/engine/display.rs` split into a cohesive `src/engine/display/` submodule.
+
 ## [0.7.1] — 2026-07-06
 
 ### Fixed

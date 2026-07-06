@@ -10,6 +10,7 @@ pub const GROUP_4: &[RootData] = &[
         name: "залуп",
         val: "залуп",
         gloss: Some("foreskin, glans"),
+        gloss_ru: Some("головка члена, крайняя плоть"),
         suffix_indices: &[3], // -и- (залупиться)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
@@ -22,6 +23,7 @@ pub const GROUP_4: &[RootData] = &[
         name: "жоп",
         val: "жоп",
         gloss: Some("ass, buttocks"),
+        gloss_ru: Some("ягодицы, зад"),
         suffix_indices: &[3], // -и- (зажопить)
         domain: Domain::Excretory,
         productivity: ProductivityClass::D,
@@ -35,6 +37,7 @@ pub const GROUP_4: &[RootData] = &[
         name: "говн",
         val: "говн",
         gloss: Some("shit, excrement"),
+        gloss_ru: Some("экскременты, кал"),
         suffix_indices: &[3], // -и- (говнить)
         domain: Domain::Excretory,
         productivity: ProductivityClass::D,
@@ -47,6 +50,7 @@ pub const GROUP_4: &[RootData] = &[
         name: "пидор",
         val: "пидор",
         gloss: Some("faggot (derog.)"),
+        gloss_ru: Some("гомосексуал (презр.)"),
         suffix_indices: &[3], // -и- (пидорить)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
@@ -59,6 +63,7 @@ pub const GROUP_4: &[RootData] = &[
         name: "курв",
         val: "курв",
         gloss: Some("whore, slut"),
+        gloss_ru: Some("распутница"),
         suffix_indices: &[3], // -и- (курвиться)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
