@@ -319,6 +319,43 @@ mod tests {
         assert_eq!(build_form("", "хуй", "ну", "ть", None), "хуйнуть");
     }
 
+    // Fluid vowel -о- (беглая гласная): the composition layer resolves the prefix
+    // to its fill_form ("со", "изо", "обо"…) and hands it here already resolved.
+    // These pin that build_stem joins it cleanly — the fill form ends in a vowel,
+    // so ъ-insertion never fires, and no triple consonant is produced.
+
+    #[test]
+    fn test_build_form_so_ssat() {
+        // с- + сс- would be *сссать (triple с); со- (fill) → соссать.
+        assert_eq!(build_form("со", "сс", "а", "ть", None), "соссать");
+    }
+
+    #[test]
+    fn test_build_form_izo_ssat_no_hard_sign() {
+        // изо- ends in a vowel: no ъ, and devoicing is already cancelled (изо, not исо).
+        assert_eq!(build_form("изо", "сс", "а", "ть", None), "изоссать");
+    }
+
+    #[test]
+    fn test_build_form_so_srat() {
+        assert_eq!(build_form("со", "ср", "а", "ть", None), "сосрать");
+    }
+
+    #[test]
+    fn test_build_form_so_zhrat() {
+        assert_eq!(build_form("со", "жр", "а", "ть", None), "сожрать");
+    }
+
+    #[test]
+    fn test_build_form_obo_ssat() {
+        assert_eq!(build_form("обо", "сс", "а", "ть", None), "обоссать");
+    }
+
+    #[test]
+    fn test_build_form_podo_zhrat() {
+        assert_eq!(build_form("подо", "жр", "а", "ть", None), "подожрать");
+    }
+
     #[test]
     fn test_build_form_zakhuyanut() {
         assert_eq!(build_form("за", "хуй", "ну", "ть", None), "захуйнуть");

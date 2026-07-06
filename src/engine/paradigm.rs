@@ -16,8 +16,8 @@ use rand::{Rng, SeedableRng};
 use crate::engine::grammar::build_form;
 use crate::engine::morpheme::{
     Attestation, ExploreError, Mode, ParadigmResult, RootData, VerbForm, ending_val,
-    endings_for_suffix, prefix_allomorphs, prefix_count, prefix_display, prefix_val,
-    select_prefix_allomorph, suffix_display, suffix_val,
+    endings_for_suffix, prefix_allomorphs, prefix_count, prefix_display, prefix_fill_form,
+    prefix_val, select_prefix_allomorph, suffix_display, suffix_val,
 };
 use crate::engine::roots::{all_roots, lookup_attestation, root_data};
 
@@ -61,8 +61,16 @@ pub fn explore(
                 }
             }
 
-            // Resolve prefix allomorph before the root
-            let prefix_form = select_prefix_allomorph(p_val, allomorphs, rd.val);
+            // Resolve the prefix surface before the root. A yer-final prefix
+            // (fill_form is Some) before a fluid-vowel root (сра-/сса-/жр-) takes
+            // its беглая -о- form (со-, изо-, разо-…), which cancels devoicing and,
+            // ending in a vowel, blocks ъ-insertion — so it takes precedence over
+            // the ordinary voiceless allomorph. Otherwise the standard selection
+            // applies. One home for the rule: docs/architecture.md §Алломорфия.
+            let prefix_form = match prefix_fill_form(prefix_idx) {
+                Some(fill) if rd.takes_fill_vowel => fill,
+                _ => select_prefix_allomorph(p_val, allomorphs, rd.val, rd.o_takes_ob),
+            };
 
             // Get endings for this suffix class
             let end_indices = endings_for_suffix(suffix_idx);
@@ -517,6 +525,141 @@ mod tests {
             .collect();
         // Some present form should exist
         assert!(!present.is_empty());
+    }
+
+    #[test]
+    fn test_explore_ssa_fill_vowel_forms() {
+        // Fluid vowel -о- (issue #28): yer-final prefixes before сса- take со-/изо-…,
+        // and no triple-с malformation survives.
+        let result = explore("сса", None).expect("сса should be valid");
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        for expected in ["соссать", "изоссать", "взоссать", "разоссать", "обоссать"]
+        {
+            assert!(
+                forms.contains(&expected),
+                "explore(сса) should contain fill-vowel form {expected}"
+            );
+        }
+        for bug in ["сссать", "исссать", "всссать", "расссать", "исоссать"]
+        {
+            assert!(
+                !forms.contains(&bug),
+                "explore(сса) must NOT contain malformed form {bug}"
+            );
+        }
+        // No form anywhere carries a triple consonant.
+        assert!(
+            !forms.iter().any(|f| f.contains("ссс")),
+            "no сса- form may contain a triple с"
+        );
+    }
+
+    #[test]
+    fn test_explore_sra_fill_vowel_forms() {
+        let result = explore("сра", None).expect("сра should be valid");
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        for expected in ["сосрать", "изосрать", "взосрать", "разосрать", "обосрать"]
+        {
+            assert!(
+                forms.contains(&expected),
+                "explore(сра) should contain fill-vowel form {expected}"
+            );
+        }
+        // Vowel-final prefixes (за-, на-, у-) never take the fluid vowel — unchanged.
+        for unchanged in ["засрать", "насрать", "усрать"] {
+            assert!(
+                forms.contains(&unchanged),
+                "vowel-prefix form {unchanged} must stay unchanged"
+            );
+        }
+    }
+
+    #[test]
+    fn test_explore_zhr_fill_vowel_forms() {
+        let result = explore("жр", None).expect("жр should be valid");
+        let forms: Vec<&str> = result.forms.iter().map(|f| f.form.as_str()).collect();
+        for expected in ["сожрать", "подожрать", "отожрать", "обожрать", "разожрать"]
+        {
+            assert!(
+                forms.contains(&expected),
+                "explore(жр) should contain fill-vowel form {expected}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_explore_non_fill_cluster_roots_unchanged() {
+        // Negative guard: cluster roots that historically do NOT take the fluid
+        // vowel must be byte-identical — с- + root, never со- + root.
+        let blev: Vec<String> = explore("блев", None)
+            .expect("блев valid")
+            .forms
+            .iter()
+            .map(|f| f.form.clone())
+            .collect();
+        assert!(
+            blev.iter().any(|f| f == "сблевать"),
+            "блев- must keep сблевать"
+        );
+        assert!(
+            !blev.iter().any(|f| f == "соблевать"),
+            "блев- must NOT overgenerate соблевать"
+        );
+
+        let droch: Vec<String> = explore("дроч", None)
+            .expect("дроч valid")
+            .forms
+            .iter()
+            .map(|f| f.form.clone())
+            .collect();
+        assert!(
+            droch.iter().any(|f| f == "сдрочить"),
+            "дроч- must keep сдрочить"
+        );
+        assert!(
+            !droch.iter().any(|f| f == "содрочить"),
+            "дроч- must NOT overgenerate содрочить"
+        );
+    }
+
+    #[test]
+    fn test_explore_govn_o_prefix_takes_ob() {
+        // говн- lexically selects об- (o_takes_ob), so the о-/об- + -и- form is
+        // обговнить (Common, Operator-confirmed), never the simplified оговнить.
+        let result = explore("говн", None).expect("говн should be valid");
+        let ob_form = result
+            .forms
+            .iter()
+            .find(|f| f.prefix_display == "о-/об-" && f.suffix_val == "и" && f.ending_val == "ть")
+            .expect("говн should have an о-/об- + -и- infinitive");
+        assert_eq!(
+            ob_form.form, "обговнить",
+            "говн- + о-/об- must build обговнить"
+        );
+        assert_eq!(
+            ob_form.attestation,
+            Attestation::Common,
+            "обговнить is Operator-confirmed Common"
+        );
+    }
+
+    #[test]
+    fn test_explore_o_prefix_other_roots_unchanged() {
+        // Guard: o_takes_ob is говн-only. Other roots keep о- before a consonant.
+        for (root, expected) in [("хар", "охарить"), ("дроч", "одрочить")] {
+            let result = explore(root, None).expect("root valid");
+            let o_form = result
+                .forms
+                .iter()
+                .find(|f| {
+                    f.prefix_display == "о-/об-" && f.suffix_val == "и" && f.ending_val == "ть"
+                })
+                .expect("root should have an о-/об- + -и- infinitive");
+            assert_eq!(
+                o_form.form, expected,
+                "{root}- must keep the о- allomorph before a consonant"
+            );
+        }
     }
 
     #[test]

@@ -15,6 +15,8 @@ pub const GROUP_2: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::B,
         present_stem: None,
+        takes_fill_vowel: true,
+        o_takes_ob: false,
         linguistic_note: "Экскреторный корень. По классификации Плуцера-Сарно \
             относится к отдельному домену (не сексуальный мат), но по продуктивности \
             не уступает корню еб-. В современном русском образует десятки глагольных форм.",
@@ -28,6 +30,8 @@ pub const GROUP_2: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::B,
         present_stem: None,
+        takes_fill_vowel: true,
+        o_takes_ob: false,
         linguistic_note: "Экскреторный корень 'мочиться'. Менее продуктивен, чем сра-, \
             но образует ряд ярких метафор: зассать ('испугаться'), \
             обоссать ('раскритиковать').",

@@ -379,3 +379,93 @@ fn version_flag_smoke() {
         .stdout(predicate::str::starts_with("matcraft "))
         .stdout(predicate::str::contains(env!("CARGO_PKG_VERSION")));
 }
+
+/// D1: fluid vowel -о- (беглая гласная) surfaces end-to-end for сса- — the
+/// corrected forms appear and NO triple-consonant malformation remains.
+/// Guards issue #28 at the CLI layer (the primary verification layer per plan).
+#[test]
+fn explore_ssa_shows_fill_vowel_forms_no_triple_consonant() {
+    matcraft()
+        .args(["explore", "сса"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("соссать"))
+        .stdout(predicate::str::contains("изоссать"))
+        .stdout(predicate::str::contains("взоссать"))
+        .stdout(predicate::str::contains("разоссать"))
+        .stdout(predicate::str::contains("обоссать"))
+        // The malformed triple-с forms must be gone.
+        .stdout(predicate::str::contains("ссс").not())
+        .stdout(predicate::str::contains("исссать").not())
+        .stdout(predicate::str::contains("сссать").not())
+        // Devoicing is cancelled: изо-, never исо-.
+        .stdout(predicate::str::contains("исоссать").not());
+}
+
+/// D2: fluid vowel -о- for сра- (corrected forms, no triple consonant).
+#[test]
+fn explore_sra_shows_fill_vowel_forms() {
+    matcraft()
+        .args(["explore", "сра"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("сосрать"))
+        .stdout(predicate::str::contains("изосрать"))
+        .stdout(predicate::str::contains("разосрать"))
+        .stdout(predicate::str::contains("обосрать"));
+}
+
+/// D3: fluid vowel -о- for жр- — сожрать, подожрать, отожрать, обожрать.
+#[test]
+fn explore_zhr_shows_fill_vowel_forms() {
+    matcraft()
+        .args(["explore", "жр"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("сожрать"))
+        .stdout(predicate::str::contains("подожрать"))
+        .stdout(predicate::str::contains("отожрать"))
+        .stdout(predicate::str::contains("обожрать"));
+}
+
+/// D4: regression guard — a NON-fill cluster root (блев-, дроч-) must be
+/// UNCHANGED: с- + root stays сблевать / сдрочить, никогда соблевать / содрочить.
+/// The fluid vowel is lexically conditioned (3 roots only), not phonological.
+#[test]
+fn explore_non_fill_roots_unchanged() {
+    matcraft()
+        .args(["explore", "блев"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("сблевать"))
+        .stdout(predicate::str::contains("соблевать").not());
+    matcraft()
+        .args(["explore", "дроч"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("сдрочить"))
+        .stdout(predicate::str::contains("содрочить").not());
+}
+
+/// D5: говн- lexically takes the об- allomorph — обговнить (Common), not оговнить.
+/// Distinct from the fluid vowel (говн- inserts no vowel; г is a single consonant).
+#[test]
+fn explore_govn_shows_ob_allomorph_form() {
+    matcraft()
+        .args(["explore", "говн", "--suffix", "и"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("обговнить"))
+        .stdout(predicate::str::contains("обговнить  ·  common"));
+}
+
+/// D6: guard — o_takes_ob is говн-only; охарить / одрочить keep о- (not об-).
+#[test]
+fn explore_o_prefix_other_roots_keep_o() {
+    matcraft()
+        .args(["explore", "хар"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("охарить"))
+        .stdout(predicate::str::contains("обхарить").not());
+}

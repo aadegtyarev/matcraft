@@ -372,13 +372,15 @@ mod tests {
 
     #[test]
     fn test_format_explore_filtered_appends_form_blocks() {
-        // Scenario 1: explore сса --suffix -ну- → short table + block for осснуть.
+        // Scenario 1: explore сса --suffix -ну- → short table + per-form blocks.
+        // Since #28 the о-/об- + сса- + -ну- form surfaces with the fluid vowel as
+        // обосснуть; this test exercises the filtered display, not the morphonology.
         let result = explore("сса", Some("ну")).expect("сса should be valid");
         let output = format_explore(&result);
         assert!(output.contains("Разбор форм:"), "detail section: {output}");
         assert!(
-            output.contains("осснуть  ·  possible"),
-            "осснуть block: {output}"
+            output.contains("обосснуть  ·  possible"),
+            "обосснуть block: {output}"
         );
         assert!(
             output.contains("разбор   : о-/об- + сса- + -ну- + -ть"),
