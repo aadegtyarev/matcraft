@@ -10,6 +10,7 @@ pub const GROUP_2: &[RootData] = &[
         name: "сра",
         val: "ср",
         gloss: Some("shit, excrete"),
+        gloss_ru: Some("испражняться"),
         suffix_indices: &[0, 1], // -а- and -ну-
         domain: Domain::Excretory,
         productivity: ProductivityClass::B,
@@ -22,6 +23,7 @@ pub const GROUP_2: &[RootData] = &[
         name: "сса",
         val: "сс",
         gloss: Some("piss, urinate"),
+        gloss_ru: Some("мочиться"),
         suffix_indices: &[0, 1], // -а- and -ну-
         domain: Domain::Excretory,
         productivity: ProductivityClass::B,

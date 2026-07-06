@@ -180,6 +180,23 @@ mod tests {
     }
 
     #[test]
+    fn test_all_roots_have_russian_gloss() {
+        // gloss_ru is the meaning shown in every command's output — it must be
+        // present and non-empty for all 35 roots (rich-output D1). The field is
+        // Option only so the form block can defend against a hypothetical gap.
+        for rd in all_roots() {
+            let gloss = rd
+                .gloss_ru
+                .unwrap_or_else(|| panic!("Root '{}' should have a Russian gloss", rd.name));
+            assert!(
+                !gloss.trim().is_empty(),
+                "Root '{}' Russian gloss must not be blank",
+                rd.name
+            );
+        }
+    }
+
+    #[test]
     fn test_domain_counts_match_source() {
         // Source §1: 7 nuclear, 7 excretory, 21 peripheral.
         let nuclear = all_roots()

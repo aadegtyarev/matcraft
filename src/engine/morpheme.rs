@@ -107,7 +107,15 @@ pub struct RootData {
     /// Usually the same as `name`, but may differ for roots where the
     /// surface form includes a thematic vowel.
     pub val: &'static str,
+    /// English gloss — a dev-facing reference only, deliberately never shown in
+    /// user output (the tool is Russian); the displayed meaning is `gloss_ru`.
+    /// Read only by tests, so it is dead in a release build by design.
+    #[allow(dead_code)]
     pub gloss: Option<&'static str>,
+    /// Russian gloss (1–4 words) — the meaning shown in every command's output.
+    /// Faithful to `gloss` and the source taxonomy, never invented. `None` means
+    /// no clear Russian gloss; the form block then prints `корень <name>-` bare.
+    pub gloss_ru: Option<&'static str>,
     /// Indices into the SUFFIXES table that this root can combine with.
     pub suffix_indices: &'static [usize],
     /// Semantic domain (source §1).
@@ -137,9 +145,15 @@ pub struct VerbForm {
 #[derive(Clone, Debug)]
 pub struct ParadigmResult {
     pub root_name: &'static str,
-    pub root_gloss: Option<&'static str>,
+    /// Russian gloss for display (the English `RootData.gloss` is dev-facing and
+    /// never shown, so it is not carried on the result).
+    pub root_gloss_ru: Option<&'static str>,
     pub root_domain: Domain,
     pub root_productivity: ProductivityClass,
+    /// The `--suffix` filter that produced this result, if any. Drives the
+    /// display: a filtered (narrow) result gets per-form breakdown blocks; the
+    /// full paradigm gets the scannable overview table only.
+    pub suffix_filter: Option<String>,
     pub forms: Vec<VerbForm>,
 }
 
@@ -368,6 +382,10 @@ pub fn suffix_index_for_val(val: &str) -> usize {
 
 struct EndingEntry {
     val: &'static str,
+    /// Display form of the ending (e.g. "-ть", "-ёт").
+    display: &'static str,
+    /// Human-readable grammatical label (Russian) for the form block.
+    label: &'static str,
     /// Which suffix class(es) this ending applies to (indices into SUFFIXES).
     applicable_to: &'static [usize],
 }
@@ -377,32 +395,63 @@ const ENDINGS: &[EndingEntry] = &[
     // 0: infinitive
     EndingEntry {
         val: "ть",
+        display: "-ть",
+        label: "инфинитив -ть",
         applicable_to: &[0, 1, 2, 3],
     },
     // 1: past masculine singular
     EndingEntry {
         val: "л",
+        display: "-л",
+        label: "прош. время, м. р. ед. ч. -л",
         applicable_to: &[0, 1, 2, 3],
     },
     // 2: present 3sg
     EndingEntry {
         val: "ёт",
+        display: "-ёт",
+        label: "наст. время, 3 л. ед. ч. -ёт",
         applicable_to: &[0],
     },
     // 3: present 3sg (-нёт for -ну-)
     EndingEntry {
         val: "нёт",
+        display: "-нёт",
+        label: "наст. время, 3 л. ед. ч. -нёт",
         applicable_to: &[1],
     },
     // 4: present 3sg (-ит for -е- and -и-)
     EndingEntry {
         val: "ит",
+        display: "-ит",
+        label: "наст. время, 3 л. ед. ч. -ит",
         applicable_to: &[2, 3],
     },
 ];
 
 pub fn ending_val(idx: usize) -> &'static str {
     ENDINGS[idx].val
+}
+
+pub fn ending_display(idx: usize) -> &'static str {
+    ENDINGS[idx].display
+}
+
+pub fn ending_label(idx: usize) -> &'static str {
+    ENDINGS[idx].label
+}
+
+/// Reverse-lookup an ending index from its value string.
+///
+/// Derived from ENDINGS so it can never drift from the table (mirror of
+/// `suffix_index_for_val`; needed because `VerbForm` stores `ending_val`, not an
+/// index). Panics on an unknown value — a programmer error, since callers pass a
+/// value that came out of ENDINGS in the first place.
+pub fn ending_by_val(val: &str) -> usize {
+    ENDINGS
+        .iter()
+        .position(|e| e.val == val)
+        .expect("unknown ending val")
 }
 
 /// Returns all ending indices that apply to a given suffix index.
@@ -522,6 +571,47 @@ mod tests {
         assert_eq!(suffix_index_for_val("ну"), 1);
         assert_eq!(suffix_index_for_val("е"), 2);
         assert_eq!(suffix_index_for_val("и"), 3);
+    }
+
+    #[test]
+    fn test_ending_by_val_round_trips() {
+        // ending_by_val must invert ending_val for every entry, so the display
+        // block can go from a VerbForm's stored ending_val back to the table.
+        for idx in 0..ENDINGS.len() {
+            assert_eq!(ending_by_val(ending_val(idx)), idx);
+        }
+    }
+
+    #[test]
+    fn test_ending_display_and_label() {
+        assert_eq!(ending_display(ending_by_val("ть")), "-ть");
+        assert_eq!(ending_label(ending_by_val("ть")), "инфинитив -ть");
+        assert_eq!(ending_display(ending_by_val("л")), "-л");
+        assert_eq!(
+            ending_label(ending_by_val("л")),
+            "прош. время, м. р. ед. ч. -л"
+        );
+        assert_eq!(ending_display(ending_by_val("ёт")), "-ёт");
+        assert_eq!(
+            ending_label(ending_by_val("ёт")),
+            "наст. время, 3 л. ед. ч. -ёт"
+        );
+        assert_eq!(ending_display(ending_by_val("нёт")), "-нёт");
+        assert_eq!(
+            ending_label(ending_by_val("нёт")),
+            "наст. время, 3 л. ед. ч. -нёт"
+        );
+        assert_eq!(ending_display(ending_by_val("ит")), "-ит");
+        assert_eq!(
+            ending_label(ending_by_val("ит")),
+            "наст. время, 3 л. ед. ч. -ит"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "unknown ending val")]
+    fn test_ending_by_val_unknown_panics() {
+        ending_by_val("щщ");
     }
 
     #[test]

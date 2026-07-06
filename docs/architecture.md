@@ -32,12 +32,12 @@ matcraft — CLI-инструмент для исследования морфо
 │                    Engine (src/engine/)                           │
 │                                                                   │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐             │
-│  │  paradigm.rs │  │  grammar.rs │  │  display.rs  │             │
-│  │  explore()   │  │ build_form()│  │ format_      │             │
-│  │  generate()  │  │ (allomorphy │  │ explore()    │             │
-│  │  list_roots()│  │  rules)     │  │ format_list_ │             │
-│  └──────┬───────┘  └──────┬──────┘  │ roots()      │             │
-│         │                  │         └──────────────┘             │
+│  │  paradigm.rs │  │  grammar.rs │  │  display/    │             │
+│  │  explore()   │  │ build_form()│  │ form_block   │             │
+│  │  generate()  │  │ (allomorphy │  │ explore·list │             │
+│  │  list_roots()│  │  rules)     │  │ boxed        │             │
+│  └──────┬───────┘  └──────┬──────┘  └──────────────┘             │
+│         │                  │                                      │
 │         ▼                  ▼                                      │
 │  ┌──────────────────────────────────────────────────────────┐     │
 │  │                   morpheme.rs                             │     │
@@ -69,7 +69,8 @@ matcraft — CLI-инструмент для исследования морфо
 Шесть модулей:
 
 #### mod.rs
-Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`, `sample_forms()`, типы `Attestation`, `VerbForm`, etc.
+Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`,
+`sample_forms()`, `example_form()`, типы `Attestation`, `VerbForm`, etc.
 
 #### morpheme.rs
 Типы и таблицы морфем (инвентарь корней — в `roots/`):
@@ -80,11 +81,13 @@ Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`, `sa
 - `Attestation` — 4 уровня: Common, Rare, Possible, Impossible
 - `VerbForm` — структура конкретной глагольной формы
 - `ParadigmResult` — результат explore()
-- `RootData` — данные корня: имя, val, глосс, суффиксы, домен, продуктивность,
+- `RootData` — данные корня: имя, val, английский `gloss` (dev-ориентир, в вывод не
+  идёт), русский `gloss_ru` (глосс для вывода), суффиксы, домен, продуктивность,
   present_stem, заметка
 - `PREFIXES` — таблица из 18 префиксов
 - `SUFFIXES` — 4 суффикса (-а-, -ну-, -е-, -и-)
-- `ENDINGS` — окончания (инфинитив, прош.вр., наст.вр. 3л.)
+- `ENDINGS` — окончания (val + display + русская метка label): инфинитив, прош.вр.,
+  наст.вр. 3л.; аксессоры `ending_display`/`ending_label`/`ending_by_val`
 - Алломорф-селекция: `select_prefix_allomorph()` для из-/ис-, раз-/рас-, вз-/вс-, о-/об-
 
 #### grammar.rs
@@ -109,6 +112,10 @@ Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`, `sa
   через `StdRng`, тот же выбор из пула, что `random_root` (общий помощник `select_root`).
 - `sample_forms(rd)` — до 3 примеров-инфинитивов уровня common для рамки (общий для
   `random` и `root-of-the-day`).
+- `example_form(rd)` — один образцовый common-инфинитив как `VerbForm` для блока-разбора
+  под рамкой `random`/`root-of-the-day` (`None`, если нет).
+- `generate()` возвращает `Vec<GeneratedForm>` (`{ root, form }`), а не `Vec<String>`,
+  чтобы каждую форму рендерить полным блоком-разбором с её корнем/доменом/глоссом.
 - Смотрит attestation через `roots::lookup_attestation()`.
 
 #### roots/ (подмодуль)
@@ -121,12 +128,22 @@ Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`, `sa
 - `group1.rs`–`group5.rs`: `GROUP_N` (литералы `RootData`) + таблицы аттестации
   (prefix_idx, suffix_idx, attestation, note)
 
-#### display.rs
-Форматирование вывода:
+#### display/ (подмодуль)
+Форматирование вывода — объясняющий, исследовательский (v0.8.0). Разбит по намерению:
 
-- `format_explore(&ParadigmResult) -> String` — таблица с группировкой по суффиксу
-- `format_list_roots(mode) -> String` — список корней с группировкой по группам (в full)
-- `format_random(&RootData, &[String]) -> String` — корень с рамкой, примерами и заметкой
+- `mod.rs` — ре-экспорт форматтеров + общие хелперы (`wrap_text`, токен/причина
+  аттестации, `domain_inline`/`domain_list_header`)
+- `form_block.rs` — `format_form_block(&RootData, &VerbForm) -> String`: общий блок
+  «полный разбор формы» (заголовок · значение · разбор · морфемы · уровень · домен),
+  переиспользуется всеми командами. Единственный дом формулировок «почему уровень» и
+  плейсхолдера `значение : —`. Глоссы морфем берутся из аксессоров, не хардкодятся.
+- `explore.rs` — `format_explore(&ParadigmResult) -> String`: легенда морфем + обзорная
+  таблица (окончания-колонки), сгруппированная по суффиксу; под фильтром `--suffix`
+  добавляет блоки-разборы (секция `Разбор форм:`)
+- `list.rs` — `format_list_roots(mode) -> String`: обогащённая строка корня (русский
+  глосс, домен · класс · тип, пометка «нет засвидетельствованных форм»)
+- `boxed.rs` — `format_random(&RootData, &[&str], Option<&VerbForm>) -> String`:
+  обогащённая рамка-сводка + `Пример разбора:` с блоком под рамкой
 
 ## Режимы работы
 

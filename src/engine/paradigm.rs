@@ -90,19 +90,28 @@ pub fn explore(
 
     Ok(ParadigmResult {
         root_name: rd.name,
-        root_gloss: rd.gloss,
+        root_gloss_ru: rd.gloss_ru,
         root_domain: rd.domain,
         root_productivity: rd.productivity,
+        suffix_filter: suffix_filter.map(|s| s.to_string()),
         forms,
     })
+}
+
+/// A generated form paired with its root, so `generate` output can be rendered
+/// as a full breakdown block (each form carries its own root/domain/gloss).
+#[derive(Clone, Debug)]
+pub struct GeneratedForm {
+    pub root: &'static RootData,
+    pub form: VerbForm,
 }
 
 /// Generate random forms.
 ///
 /// If `root_name` is `None`, picks from all available roots in the given mode.
-/// Returns `count` randomly selected full-form strings.
-/// Count is clamped to 1..=100.
-pub fn generate(mode: Mode, root_name: Option<&str>, count: usize) -> Vec<String> {
+/// Returns `count` randomly selected forms, each paired with its root so the
+/// caller can render a full breakdown block. Count is clamped to 1..=100.
+pub fn generate(mode: Mode, root_name: Option<&str>, count: usize) -> Vec<GeneratedForm> {
     let count = count.clamp(1, 100);
     let mut rng = rand::rng();
 
@@ -118,14 +127,15 @@ pub fn generate(mode: Mode, root_name: Option<&str>, count: usize) -> Vec<String
         None => list_roots(mode),
     };
 
-    let mut pool: Vec<String> = Vec::new();
+    let mut pool: Vec<GeneratedForm> = Vec::new();
 
     for &root in &roots {
+        let Some(rd) = root_data(root) else { continue };
         if let Ok(result) = explore(root, None) {
             // Only include forms with attestation != Impossible
             for vf in result.forms {
                 if vf.attestation != Attestation::Impossible {
-                    pool.push(vf.form);
+                    pool.push(GeneratedForm { root: rd, form: vf });
                 }
             }
         }
@@ -200,6 +210,21 @@ pub fn sample_forms(rd: &RootData) -> Vec<String> {
     }
 }
 
+/// One exemplary form for the `random` / `root-of-the-day` breakdown block.
+///
+/// The first Common infinitive of the root, as a full `VerbForm` (unlike
+/// `sample_forms`, which returns only the word strings for the summary box).
+/// Returns `None` for a root with no Common infinitive (a nominal root, or a
+/// verbal root whose forms are all Possible post-grounding) — the display then
+/// prints an honest "no attested example" note rather than inventing one.
+pub fn example_form(rd: &RootData) -> Option<VerbForm> {
+    explore(rd.name, None)
+        .ok()?
+        .forms
+        .into_iter()
+        .find(|f| f.ending_val == "ть" && f.attestation == Attestation::Common)
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -262,13 +287,17 @@ mod tests {
     #[test]
     fn test_generate_form_is_valid() {
         let forms = generate(Mode::Full, Some("еб"), 10);
-        for form in &forms {
-            assert!(!form.is_empty(), "Generated form should not be empty");
+        for gf in &forms {
             assert!(
-                form.contains("еб"),
-                "Form '{}' should contain root 'еб'",
-                form
+                !gf.form.form.is_empty(),
+                "Generated form should not be empty"
             );
+            assert!(
+                gf.form.form.contains("еб"),
+                "Form '{}' should contain root 'еб'",
+                gf.form.form
+            );
+            assert_eq!(gf.root.name, "еб", "GeneratedForm root must match");
         }
     }
 
@@ -494,11 +523,11 @@ mod tests {
     fn test_generate_from_sra() {
         let forms = generate(Mode::Full, Some("сра"), 3);
         assert_eq!(forms.len(), 3);
-        for form in &forms {
+        for gf in &forms {
             assert!(
-                form.contains("ср"),
+                gf.form.form.contains("ср"),
                 "Form '{}' should contain root 'ср'",
-                form
+                gf.form.form
             );
         }
     }
@@ -507,11 +536,11 @@ mod tests {
     fn test_generate_from_pizd() {
         let forms = generate(Mode::Full, Some("пизд"), 3);
         assert_eq!(forms.len(), 3);
-        for form in &forms {
+        for gf in &forms {
             assert!(
-                form.contains("пизд"),
+                gf.form.form.contains("пизд"),
                 "Form '{}' should contain 'пизд'",
-                form
+                gf.form.form
             );
         }
     }
@@ -701,6 +730,32 @@ mod tests {
         assert!(
             sample_forms(rd).is_empty(),
             "nominal root манд- should yield no sample forms"
+        );
+    }
+
+    #[test]
+    fn test_example_form_verb_root_is_common_infinitive() {
+        let rd = root_data("еб").expect("еб should be a valid root");
+        let ex = example_form(rd).expect("еб- should have a Common infinitive");
+        assert_eq!(ex.ending_val, "ть", "example must be an infinitive");
+        assert_eq!(
+            ex.attestation,
+            Attestation::Common,
+            "example must be Common"
+        );
+        assert!(
+            ex.form.contains("еб"),
+            "example form should contain the root"
+        );
+    }
+
+    #[test]
+    fn test_example_form_nominal_root_none() {
+        // No Common infinitive → None, so the display shows an honest note.
+        let rd = root_data("манд").expect("манд should be a valid root");
+        assert!(
+            example_form(rd).is_none(),
+            "nominal root манд- should have no example form"
         );
     }
 }

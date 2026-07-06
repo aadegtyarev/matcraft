@@ -17,18 +17,26 @@ fn matcraft() -> Command {
     Command::cargo_bin("matcraft").expect("binary `matcraft` should be built by cargo test")
 }
 
-/// Count the lines the command printed to stdout (one form per line).
-fn stdout_line_count(args: &[&str]) -> usize {
+/// Count the breakdown blocks the command printed to stdout.
+///
+/// `generate` now prints a multi-line breakdown block per form (not one line per
+/// form), so blocks are counted by their stable per-block marker `разбор   :`
+/// — one occurrence per rendered form.
+fn stdout_block_count(args: &[&str]) -> usize {
     let output = matcraft().args(args).output().expect("command should run");
     assert!(output.status.success(), "expected success for {args:?}");
-    String::from_utf8_lossy(&output.stdout).lines().count()
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter(|l| l.contains("разбор   :"))
+        .count()
 }
 
 // ---------------------------------------------------------------------------
 // A. Audit-named untested branches (core of the task)
 // ---------------------------------------------------------------------------
 
-/// A1: Explore dispatch, Ok path — header, productivity class, suffix section.
+/// A1: Explore dispatch, Ok path — header (root, Russian gloss, productivity),
+/// morpheme legend, suffix section, and the new ending columns.
 #[test]
 fn explore_known_root_renders_paradigm() {
     matcraft()
@@ -36,7 +44,11 @@ fn explore_known_root_renders_paradigm() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Корень: еб-"))
+        .stdout(predicate::str::contains("«совокупляться»"))
         .stdout(predicate::str::contains("продуктивность A"))
+        .stdout(predicate::str::contains("Легенда:"))
+        .stdout(predicate::str::contains("Инфинитив"))
+        .stdout(predicate::str::contains("Наст. 3л"))
         .stdout(predicate::str::contains("Суффикс"));
 }
 
@@ -82,17 +94,17 @@ fn generate_count_over_100_fails_on_stderr() {
         .stderr(predicate::str::contains("не может превышать 100"));
 }
 
-/// A6: guard boundary — exactly 100 is allowed and prints 100 lines.
+/// A6: guard boundary — exactly 100 is allowed and prints 100 breakdown blocks.
 #[test]
 fn generate_count_100_is_allowed() {
-    assert_eq!(stdout_line_count(&["generate", "--count", "100"]), 100);
+    assert_eq!(stdout_block_count(&["generate", "--count", "100"]), 100);
 }
 
-/// A7: `--count 0` is internally clamped to 1..=100 → one line (documents that
+/// A7: `--count 0` is internally clamped to 1..=100 → one block (documents that
 /// the clamp is distinct from the `> 100` guard).
 #[test]
 fn generate_count_zero_clamps_to_one() {
-    assert_eq!(stdout_line_count(&["generate", "--count", "0"]), 1);
+    assert_eq!(stdout_block_count(&["generate", "--count", "0"]), 1);
 }
 
 /// A8: root-not-found on Generate → exit 1, message on stderr.
@@ -106,11 +118,11 @@ fn generate_unknown_root_fails_on_stderr() {
         .stderr(predicate::str::contains("не найден"));
 }
 
-/// A9: trailing-hyphen strip on Generate — `еб-` resolves and prints one line.
+/// A9: trailing-hyphen strip on Generate — `еб-` resolves and prints one block.
 #[test]
 fn generate_strips_trailing_hyphen() {
     assert_eq!(
-        stdout_line_count(&["generate", "--root", "еб-", "--count", "1"]),
+        stdout_block_count(&["generate", "--root", "еб-", "--count", "1"]),
         1
     );
 }
@@ -129,10 +141,11 @@ fn random_classic_renders_box() {
         .assert()
         .success()
         .stdout(predicate::str::contains("╔"))
-        .stdout(predicate::str::contains("Заметка:"));
+        .stdout(predicate::str::contains("Заметка:"))
+        .stdout(predicate::str::contains("Пример разбора:"));
 }
 
-/// A11: Random dispatch in full mode — same box-rendering guarantee.
+/// A11: Random dispatch in full mode — same box + example-block guarantee.
 /// (Same coverage limit as A10.)
 #[test]
 fn random_full_renders_box() {
@@ -141,7 +154,8 @@ fn random_full_renders_box() {
         .assert()
         .success()
         .stdout(predicate::str::contains("╔"))
-        .stdout(predicate::str::contains("Заметка:"));
+        .stdout(predicate::str::contains("Заметка:"))
+        .stdout(predicate::str::contains("Пример разбора:"));
 }
 
 /// Random never panics across repeated runs (no form assertions — see A10).
@@ -196,11 +210,11 @@ fn explore_e_i_class_root() {
         .stdout(predicate::str::contains("-и-"));
 }
 
-/// B4: `generate --root еб --count 3` prints exactly 3 lines.
+/// B4: `generate --root еб --count 3` prints exactly 3 breakdown blocks.
 #[test]
 fn generate_root_count_three() {
     assert_eq!(
-        stdout_line_count(&["generate", "--root", "еб", "--count", "3"]),
+        stdout_block_count(&["generate", "--root", "еб", "--count", "3"]),
         3
     );
 }
@@ -282,7 +296,7 @@ fn explore_verbal_root_nonmatching_filter_is_not_noun_only() {
 // D. root-of-the-day (deterministic within a day)
 // ---------------------------------------------------------------------------
 
-/// D1: `root-of-the-day` (classic) renders the same box as `random`.
+/// D1: `root-of-the-day` (classic) renders the same box + example as `random`.
 #[test]
 fn root_of_the_day_classic_renders_box() {
     matcraft()
@@ -290,10 +304,11 @@ fn root_of_the_day_classic_renders_box() {
         .assert()
         .success()
         .stdout(predicate::str::contains("╔"))
-        .stdout(predicate::str::contains("Заметка:"));
+        .stdout(predicate::str::contains("Заметка:"))
+        .stdout(predicate::str::contains("Пример разбора:"));
 }
 
-/// D2: `--mode full root-of-the-day` — same box-rendering guarantee.
+/// D2: `--mode full root-of-the-day` — same box + example-block guarantee.
 #[test]
 fn root_of_the_day_full_renders_box() {
     matcraft()
@@ -301,7 +316,8 @@ fn root_of_the_day_full_renders_box() {
         .assert()
         .success()
         .stdout(predicate::str::contains("╔"))
-        .stdout(predicate::str::contains("Заметка:"));
+        .stdout(predicate::str::contains("Заметка:"))
+        .stdout(predicate::str::contains("Пример разбора:"));
 }
 
 /// D3: determinism within a day — two invocations produce byte-identical stdout.

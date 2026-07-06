@@ -99,8 +99,12 @@ fn main() {
                 return;
             }
 
-            for form in forms {
-                println!("{form}");
+            // Each form is a full breakdown block, separated by a blank line.
+            for (i, gf) in forms.iter().enumerate() {
+                if i > 0 {
+                    println!();
+                }
+                print!("{}", engine::display::format_form_block(gf.root, &gf.form));
             }
         }
 
@@ -113,7 +117,8 @@ fn main() {
             let rd = engine::random_root(cli.mode);
             let samples = engine::sample_forms(rd);
             let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
-            let output = engine::display::format_random(rd, &sample_refs);
+            let example = engine::example_form(rd);
+            let output = engine::display::format_random(rd, &sample_refs, example.as_ref());
             println!("{output}");
         }
 
@@ -128,7 +133,8 @@ fn main() {
             let rd = engine::root_of_the_day(cli.mode, day_index);
             let samples = engine::sample_forms(rd);
             let sample_refs: Vec<&str> = samples.iter().map(|s| s.as_str()).collect();
-            let output = engine::display::format_random(rd, &sample_refs);
+            let example = engine::example_form(rd);
+            let output = engine::display::format_random(rd, &sample_refs, example.as_ref());
             println!("{output}");
         }
     }

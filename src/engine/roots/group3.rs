@@ -11,6 +11,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "дроч",
         val: "дроч",
         gloss: Some("masturbate"),
+        gloss_ru: Some("мастурбировать"),
         suffix_indices: &[3], // -и- (дрочить)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -23,6 +24,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "трах",
         val: "трах",
         gloss: Some("copulate, fuck"),
+        gloss_ru: Some("совокупляться"),
         suffix_indices: &[0], // -а- (трахать)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -35,6 +37,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "жр",
         val: "жр",
         gloss: Some("eat greedily, devour"),
+        gloss_ru: Some("жрать, есть жадно"),
         suffix_indices: &[0], // -а- (жрать)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -47,6 +50,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "хер",
         val: "хер",
         gloss: Some("spoil, cancel"),
+        gloss_ru: Some("портить, отменять"),
         suffix_indices: &[3], // -и- (херить)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -60,6 +64,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "перд",
         val: "перд",
         gloss: Some("fart"),
+        gloss_ru: Some("пускать газы"),
         suffix_indices: &[2, 1], // -е- (пердеть), -ну- (перднуть)
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
@@ -73,6 +78,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "хар",
         val: "хар",
         gloss: Some("copulate roughly"),
+        gloss_ru: Some("грубо совокупляться"),
         suffix_indices: &[3], // -и- (харить)
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -85,6 +91,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "блев",
         val: "блев",
         gloss: Some("vomit"),
+        gloss_ru: Some("блевать, извергать рвоту"),
         suffix_indices: &[0], // -а- (блевать); present stem блю-
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
@@ -98,6 +105,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "бзд",
         val: "бзд",
         gloss: Some("fart silently"),
+        gloss_ru: Some("пускать газы беззвучно"),
         suffix_indices: &[2], // -е- (бздеть)
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
@@ -110,6 +118,7 @@ pub const GROUP_3: &[RootData] = &[
         name: "дрист",
         val: "дрист",
         gloss: Some("have diarrhea"),
+        gloss_ru: Some("страдать поносом"),
         suffix_indices: &[0], // -а- (дристать)
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
