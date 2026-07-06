@@ -198,6 +198,19 @@ fn list_roots_full_reports_thirtyfive_and_domains() {
         .stdout(predicate::str::contains("Периферия"));
 }
 
+/// B2b: `--mode` is a global clap flag, so it is accepted AFTER the subcommand
+/// too — `list-roots --mode full` must work identically to `--mode full
+/// list-roots`. Closes the coverage gap that let the pre-`global = true` bug
+/// ship green: every prior `--mode` test puts the flag pre-subcommand.
+#[test]
+fn list_roots_full_mode_accepted_after_subcommand() {
+    matcraft()
+        .args(["list-roots", "--mode", "full"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Все корни (35)"));
+}
+
 /// B3: Explore of the -е-/-и- class root surfaces both conjugation stems.
 #[test]
 fn explore_e_i_class_root() {

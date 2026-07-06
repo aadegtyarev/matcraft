@@ -34,6 +34,8 @@
 |---|---|---|---|
 | `--mode` | `classic` \| `full` | `classic` | Набор корней для `list-roots`, `generate` (без `--root`), `random`, `root-of-the-day`. Ограничен clap `value_enum`; иное значение → ошибка парсинга (exit 2). |
 
+`--mode` помечен `global = true` в clap: принимается в любой позиции — до или после субкоманды (напр., `matcraft list-roots --mode full`).
+
 `classic` = ядро (7) + два продуктивных экскреторных корня (сра-, сса-) = 9 корней.
 `full` = все 35 корней. Состав classic выводится из таксономии
 (`Nuclear` ∪ {`Excretory` ≤ B}), а не хардкодится.
