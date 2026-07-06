@@ -130,7 +130,7 @@ Re-exports: `explore()`, `generate()`, `random_root()`, `root_of_the_day()`,
   (prefix_idx, suffix_idx, attestation, note)
 
 #### display/ (подмодуль)
-Форматирование вывода — объясняющий, исследовательский (v0.8.0). Разбит по намерению:
+Форматирование вывода — объясняющий, исследовательский. Разбит по намерению:
 
 - `mod.rs` — ре-экспорт форматтеров + общие хелперы (`wrap_text`, токен/причина
   аттестации, `domain_inline`/`domain_list_header`)
