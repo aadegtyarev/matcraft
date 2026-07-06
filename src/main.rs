@@ -9,7 +9,7 @@ mod engine;
 )]
 struct Cli {
     /// Режим отображения корней: classic (9 корней) или full (все 35)
-    #[arg(long, default_value_t = engine::morpheme::Mode::Classic)]
+    #[arg(long, global = true, default_value_t = engine::morpheme::Mode::Classic)]
     mode: engine::morpheme::Mode,
 
     #[command(subcommand)]

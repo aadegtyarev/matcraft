@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] — 2026-07-06
+
+### Fixed
+
+- **`--mode` is now accepted in any position** (before OR after the subcommand). The flag was
+  documented as «Глобальный флаг» but the code did not mark it `global = true`, so
+  `matcraft <subcommand> --mode <X>` failed with `unexpected argument '--mode'`. Now matches
+  the documented contract. Backwards-compatible (the pre-subcommand form still works). (#35)
+
 ## [0.9.0] — 2026-07-06
 
 ### Fixed
