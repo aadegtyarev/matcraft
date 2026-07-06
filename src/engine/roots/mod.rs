@@ -396,4 +396,23 @@ mod tests {
         let (att, _note) = lookup_attestation("елд", 0, 0);
         assert_eq!(att, Attestation::Possible);
     }
+
+    #[test]
+    fn test_takes_fill_vowel_only_three_roots() {
+        // The fluid vowel -о- is lexically conditioned (issue #28): exactly сра-,
+        // сса-, жр- carry it — no other root, whatever its surface cluster.
+        for name in ["сра", "сса", "жр"] {
+            assert!(
+                root_data(name).expect("root exists").takes_fill_vowel,
+                "{name}- must take the fluid vowel"
+            );
+        }
+        for name in ["еб", "блев", "дроч", "трах", "бзд", "дрист", "говн"]
+        {
+            assert!(
+                !root_data(name).expect("root exists").takes_fill_vowel,
+                "{name}- must NOT take the fluid vowel"
+            );
+        }
+    }
 }

@@ -15,6 +15,8 @@ pub const GROUP_4: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень, обозначающий головку полового члена \
             и крайнюю плоть. В глагольных формах (залупиться) означает \
             'обнажить головку'. По Плуцеру-Сарно — номинатив с глагольным потенциалом.",
@@ -28,6 +30,8 @@ pub const GROUP_4: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'ягодицы, зад'. \
             В глагольных формах (зажопить, прижопить) развивает значение \
             'присвоить, не поделиться'. Один из самых частотных корней \
@@ -42,6 +46,8 @@ pub const GROUP_4: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: true,
         linguistic_note: "Именной корень, обозначающий экскременты. \
             В глагольных формах (говнить, заговнить) — 'портить, делать плохо'. \
             Чрезвычайно продуктивен в именной деривации (говно, говённый, говнище).",
@@ -55,6 +61,8 @@ pub const GROUP_4: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень, сокращение от 'педераст'. \
             Глагольные формы (пидорить, запидорить) развивают значение \
             'анально изнасиловать; испортить'. Обладает сильной обсценной окраской.",
@@ -68,6 +76,8 @@ pub const GROUP_4: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'проститутка, \
             распутная женщина'. От латинского curva. Глагольные формы \
             (курвиться, закурвиться) означают 'вести себя распутно'. \
@@ -108,16 +118,16 @@ pub const ROOT_GOVN_ATTEST: &[(usize, usize, Attestation, Option<&str>)] = &[
     ),
     (5, 3, Attestation::Rare, Some("наговнить; наделать дерьма")),
     (8, 3, Attestation::Rare, Some("провонять; обратить в говно")),
-    // §7 honesty: о-/об- is the preposition rule applied to the verbal prefix as a
-    // simplification (the engine builds о- before a consonant). The real colloquial
-    // derivative takes об- (обговнять/обгавнякать); Common for оговнить is unattested by
-    // the source → Possible, and the note is given as a meaning projection, not a real
-    // form. See docs/decisions/o-ob-allomorphy.md.
+    // о-/об- + говн-: говн- lexically selects the об- allomorph (o_takes_ob), so the
+    // engine now builds обговнить — the real attested colloquial derivative (Operator-
+    // confirmed Common), not the earlier simplified оговнить. This resolves говн-'s
+    // #24 case; the general о-/об- irregularity for OTHER roots stays a documented
+    // simplification. See docs/decisions/o-ob-allomorphy.md.
     (
         11,
         3,
-        Attestation::Possible,
-        Some("проекция значения 'очернить'; реальный дериват — обговнять (об-)"),
+        Attestation::Common,
+        Some("обговнить; испортить, испачкать"),
     ),
 ];
 

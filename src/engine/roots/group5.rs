@@ -18,6 +18,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень из классификации Плуцера-Сарно. \
             Обозначает один из типов женских гениталий (с высоким входом). \
             Чисто номинативный корень, без глагольных форм.",
@@ -31,6 +33,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень из пласта обсценной анатомической \
             лексики. Обозначает тип женских гениталий с поперечным разрезом. \
             Не образует глагольных форм.",
@@ -44,6 +48,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень из идиша (פּאָץ — 'член'). \
             В русском мате — универсальное презрительное обозначение мужчины. \
             Не образует глагольных форм. Заимствование XX века.",
@@ -57,6 +63,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'сперма'. \
             Относится к соматическому слою мата. Глагольных форм не образует. \
             Устаревающий корень, редко встречается в современной речи.",
@@ -70,6 +78,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень, обозначающий женские гениталии. \
             Заимствован из французского (la moniche) через уголовное арго. \
             Не образует глагольных форм.",
@@ -83,6 +93,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'девственная плева'. \
             Относится к анатомическому слою мата. Не образует глагольных форм. \
             Связан с 'целка' — уничижительное обозначение девственницы.",
@@ -96,6 +108,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень из классификации Плуцера-Сарно. \
             Обозначает тип женских гениталий с крупными половыми губами. \
             Не образует глагольных форм. От 'королёк' — сорт сладкого апельсина.",
@@ -109,6 +123,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень, обозначающий куннилингус. \
             Заимствование из немецкого через медицинский дискурс. \
             Не образует глагольных форм.",
@@ -122,6 +138,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'сперма'. \
             От греческого σπέρμα через медицинскую терминологию. \
             Не образует глагольных форм. Стилистически нейтральный корень.",
@@ -135,6 +153,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'менструация'. \
             От латинского menstruum. Не образует глагольных форм. \
             Относится к соматическому слою, на границе медицинской \
@@ -149,6 +169,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень, обозначающий фелляцию. \
             Заимствование из французского (la minette, 'кошечка'). \
             Не образует глагольных форм. Преимущественно именной.",
@@ -162,6 +184,8 @@ pub const GROUP_5: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Именной корень со значением 'презерватив'. \
             Французское заимствование (condom). В переносном значении — \
             'противный, надоедливый человек'. Не образует глагольных форм.",

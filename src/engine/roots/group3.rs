@@ -16,6 +16,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень со значением 'заниматься мастурбацией'. \
             Образует формы II спряжения (дрочить, дрочу, дрочишь). \
             В переносном значении — 'надоедать, изводить повторами'.",
@@ -29,6 +31,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень, обозначающий половой акт. \
             Спрягается по I классу (-а-): трахать, трахаю, трахает. \
             Омонимичен звукоподражательному 'трах' (удар, грохот).",
@@ -42,6 +46,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: true,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень 'есть жадно, много'. \
             От праславянского *žerti. Нестандартное спряжение с чередованием: \
             жрать, жру, жрёт. Переносно: 'проживать, тратить впустую'.",
@@ -55,6 +61,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень от существительного 'хер' \
             (название буквы Х, эвфемизм 'хуй'). Глагол херить значит \
             'портить, вычёркивать, отменять'. Относится к новейшему слою мата \
@@ -69,6 +77,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Корень со значением 'испускать кишечные газы'. \
             От праславянского *pьrděti. Два глагольных класса: длительное пердеть \
             (II спряжение) и однократное перднуть. Имеет широкий ряд \
@@ -83,6 +93,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень с общим значением грубого действия. \
             Спрягается по II спряжению: харить, харю, харишь. Семантический диапазон \
             широк: от полового акта до интенсивной работы. Этимология неясна.",
@@ -96,6 +108,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Peripheral,
         productivity: ProductivityClass::D,
         present_stem: Some("блю"),
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Глагольный корень 'извергать рвоту'. \
             От праславянского *bljьvati. Характеризуется историческим чередованием \
             в основе: инфинитив блевать, основа настоящего времени блю- (блюю, блюёт). \
@@ -110,6 +124,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Корень со значением 'испускать газы беззвучно'. \
             Спрягается по II классу (-е-): бздеть, бзжу, бздишь. \
             Переносное значение развилось в сторону страха: 'бздеть' = 'бояться, трусить'.",
@@ -123,6 +139,8 @@ pub const GROUP_3: &[RootData] = &[
         domain: Domain::Excretory,
         productivity: ProductivityClass::C,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Корень со значением 'страдать поносом'. \
             От праславянского *dristati. Спрягается по I классу (-а-): \
             дристать, дрищу, дрищешь. В переносном значении — \

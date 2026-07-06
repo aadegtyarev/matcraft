@@ -125,6 +125,18 @@ pub struct RootData {
     /// Present-tense stem for roots with an irregular present stem
     /// (e.g., "блю" for root "блев"). None for most roots.
     pub present_stem: Option<&'static str>,
+    /// Whether this root triggers the fluid vowel -о- (беглая гласная) after a
+    /// yer-final prefix (изо-, со-, разо-…). A lexically conditioned morphonological
+    /// property (historically weak-yer roots), NOT derivable from the surface
+    /// cluster: `true` only for сра-, сса-, жр-. See docs/decisions/cluster-fill-vowel.md.
+    pub takes_fill_vowel: bool,
+    /// Whether this root selects the об- allomorph of the о-/об- prefix even before
+    /// a consonant (обговнить, not оговнить). A lexical override of the general
+    /// simplification (об- only before a vowel): `true` only for говн-, whose real
+    /// derivative is обговнять/обговнить. Distinct from the fluid-vowel обо- path
+    /// (говн- inserts no vowel — г is a single consonant). See
+    /// docs/decisions/o-ob-allomorphy.md.
+    pub o_takes_ob: bool,
     /// Linguistic note (2-4 sentences in Russian) for the random subcommand.
     pub linguistic_note: &'static str,
 }
@@ -194,6 +206,13 @@ struct PrefixEntry {
     /// Display name in tables (e.g., "из-/ис-", or "(без)" for bare).
     display: &'static str,
     allomorphs: &'static [&'static str],
+    /// The fluid-vowel (беглая гласная -о-) allomorph of this yer-final prefix,
+    /// used before a `takes_fill_vowel` root (сра-, сса-, жр-). Carries the VOICED
+    /// base — the fluid -о- cancels devoicing (изо-, not исо-; взо-, not всо-;
+    /// разо-, not рас+о — source: изостлать vs исстелю). `None` for prefixes that
+    /// never take the fluid vowel (prefixes ending in a vowel, and bare).
+    /// See docs/decisions/cluster-fill-vowel.md.
+    fill_form: Option<&'static str>,
 }
 
 /// All prefixes in the inventory.
@@ -205,96 +224,117 @@ const PREFIXES: &[PrefixEntry] = &[
         val: "",
         display: "(без)",
         allomorphs: &[],
+        fill_form: None,
     },
     PrefixEntry {
         val: "вы",
         display: "вы-",
         allomorphs: &[],
+        fill_form: None,
     },
     PrefixEntry {
         val: "до",
         display: "до-",
         allomorphs: &[],
+        fill_form: None,
     },
     PrefixEntry {
         val: "за",
         display: "за-",
         allomorphs: &[],
+        fill_form: None,
     },
-    // 4: из-/ис-
+    // 4: из-/ис-/изо-
     PrefixEntry {
         val: "из",
         display: "из-/ис-",
         allomorphs: &["ис"],
+        fill_form: Some("изо"),
     },
     PrefixEntry {
         val: "на",
         display: "на-",
         allomorphs: &[],
+        fill_form: None,
     },
     // 6: от-/ото-
     PrefixEntry {
         val: "от",
         display: "от-/ото-",
         allomorphs: &["ото"],
+        fill_form: Some("ото"),
     },
     PrefixEntry {
         val: "пере",
         display: "пере-",
         allomorphs: &[],
+        fill_form: None,
     },
     PrefixEntry {
         val: "про",
         display: "про-",
         allomorphs: &[],
+        fill_form: None,
     },
+    // 9: в-/во-
     PrefixEntry {
         val: "в",
         display: "в-",
         allomorphs: &[],
+        fill_form: Some("во"),
     },
-    // 10: вз-/вс-
+    // 10: вз-/вс-/взо-
     PrefixEntry {
         val: "вз",
         display: "вз-/вс-",
         allomorphs: &["вс"],
+        fill_form: Some("взо"),
     },
-    // 11: о-/об-
+    // 11: о-/об-/обо-
     PrefixEntry {
         val: "о",
         display: "о-/об-",
         allomorphs: &["об"],
+        fill_form: Some("обо"),
     },
     PrefixEntry {
         val: "по",
         display: "по-",
         allomorphs: &[],
+        fill_form: None,
     },
+    // 13: под-/подо-
     PrefixEntry {
         val: "под",
         display: "под-",
         allomorphs: &[],
+        fill_form: Some("подо"),
     },
     PrefixEntry {
         val: "при",
         display: "при-",
         allomorphs: &[],
+        fill_form: None,
     },
-    // 15: раз-/рас-
+    // 15: раз-/рас-/разо-
     PrefixEntry {
         val: "раз",
         display: "раз-/рас-",
         allomorphs: &["рас"],
+        fill_form: Some("разо"),
     },
+    // 16: с-/со-
     PrefixEntry {
         val: "с",
         display: "с-",
         allomorphs: &[],
+        fill_form: Some("со"),
     },
     PrefixEntry {
         val: "у",
         display: "у-",
         allomorphs: &[],
+        fill_form: None,
     },
 ];
 
@@ -308,6 +348,15 @@ pub fn prefix_display(idx: usize) -> &'static str {
 
 pub fn prefix_allomorphs(idx: usize) -> &'static [&'static str] {
     PREFIXES[idx].allomorphs
+}
+
+/// The fluid-vowel (беглая -о-) form of a prefix, if it is yer-final.
+///
+/// `Some("изо")`, `Some("со")`, … for the 8 yer-final prefixes; `None` otherwise.
+/// Consulted only when the root `takes_fill_vowel` (сра-/сса-/жр-); see
+/// `docs/architecture.md` §Алломорфия.
+pub fn prefix_fill_form(idx: usize) -> Option<&'static str> {
+    PREFIXES[idx].fill_form
 }
 
 pub fn prefix_count() -> usize {
@@ -475,12 +524,15 @@ pub fn endings_for_suffix(suffix_idx: usize) -> Vec<usize> {
 ///   otherwise use "из".
 /// - вз-/вс-: use "вс" before voiceless consonants; otherwise "вз".
 /// - раз-/рас-: use "рас" before voiceless consonants; otherwise "раз".
-/// - о-/об-: use "об" before vowels; otherwise "о".
+/// - о-/об-: use "об" before vowels; otherwise "о" — UNLESS the root sets
+///   `o_takes_ob` (lexical override, говн- → обговнить), in which case "об" is
+///   used before the consonant too.
 /// - All other prefixes: return the primary form (ъ-insertion is handled in build_stem).
 pub fn select_prefix_allomorph<'a>(
     prefix_val: &'a str,
     allomorphs: &[&str],
     root: &str,
+    o_takes_ob: bool,
 ) -> &'a str {
     if allomorphs.is_empty() {
         return prefix_val;
@@ -512,7 +564,7 @@ pub fn select_prefix_allomorph<'a>(
             }
         }
         "о" => {
-            if is_vowel {
+            if is_vowel || o_takes_ob {
                 "об"
             } else {
                 prefix_val
@@ -537,12 +589,45 @@ mod tests {
 
     #[test]
     fn test_select_allomorph_iz_before_eb() {
-        assert_eq!(select_prefix_allomorph("из", &["ис"], "еб"), "ис");
+        assert_eq!(select_prefix_allomorph("из", &["ис"], "еб", false), "ис");
     }
 
     #[test]
     fn test_select_allomorph_no_allomorphs() {
-        assert_eq!(select_prefix_allomorph("вы", &[], "еб"), "вы");
+        assert_eq!(select_prefix_allomorph("вы", &[], "еб", false), "вы");
+    }
+
+    #[test]
+    fn test_select_allomorph_o_takes_ob_forces_ob_before_consonant() {
+        // говн- (o_takes_ob=true): об- even before a consonant → обговн-.
+        assert_eq!(select_prefix_allomorph("о", &["об"], "говн", true), "об");
+        // Any other root (o_takes_ob=false) keeps о- before a consonant → охар-, одроч-.
+        assert_eq!(select_prefix_allomorph("о", &["об"], "хар", false), "о");
+        assert_eq!(select_prefix_allomorph("о", &["об"], "дроч", false), "о");
+        // The vowel rule is untouched: об- still applies before a vowel regardless.
+        assert_eq!(select_prefix_allomorph("о", &["об"], "еб", false), "об");
+    }
+
+    #[test]
+    fn test_prefix_fill_form_yer_final_are_voiced() {
+        // The 8 yer-final prefixes carry the VOICED fill base (devoicing cancelled).
+        assert_eq!(prefix_fill_form(4), Some("изо")); // из-
+        assert_eq!(prefix_fill_form(6), Some("ото")); // от-
+        assert_eq!(prefix_fill_form(9), Some("во")); // в-
+        assert_eq!(prefix_fill_form(10), Some("взо")); // вз-
+        assert_eq!(prefix_fill_form(11), Some("обо")); // о-
+        assert_eq!(prefix_fill_form(13), Some("подо")); // под-
+        assert_eq!(prefix_fill_form(15), Some("разо")); // раз-
+        assert_eq!(prefix_fill_form(16), Some("со")); // с-
+    }
+
+    #[test]
+    fn test_prefix_fill_form_none_for_vowel_and_bare_prefixes() {
+        assert_eq!(prefix_fill_form(0), None); // bare
+        assert_eq!(prefix_fill_form(1), None); // вы-
+        assert_eq!(prefix_fill_form(3), None); // за-
+        assert_eq!(prefix_fill_form(5), None); // на-
+        assert_eq!(prefix_fill_form(17), None); // у-
     }
 
     #[test]

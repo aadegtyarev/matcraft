@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-07-06
+
+### Fixed
+
+- **Fill-vowel (беглая -о-) morphonology** at the prefix–root boundary for сра-, сса-, жр-:
+  vowelless prefixes now insert -о- instead of producing consonant pile-ups —
+  ссрать→**сосрать**, всссать→**взоссать**, сжрать→**сожрать**, оссать→**обоссать**, etc.
+  No triple-consonant forms remain. Lexically scoped (only these 3 roots take the fill vowel);
+  incidentally realizes обо-/ото- for them. (#28)
+- **говн- takes об-** with the о-prefix: `оговнить` → **обговнить** (the real attested form),
+  attestation raised to Common. Only говн- — other о-/об- roots keep о-. (resolves the #24
+  case for this root; the general о-/об- irregularity stays a documented simplification)
+
+### Notes
+
+- Edge fill-vowel forms (воссать, восрать, вожрать, …) are marked `possible` — derivable but
+  not verified against the source (raw volumes unavailable). See `docs/decisions/cluster-fill-vowel.md`.
+
 ## [0.8.0] — 2026-07-06
 
 ### Changed

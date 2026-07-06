@@ -16,6 +16,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::A,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Самый продуктивный матерный корень. От праславянского *jebati. \
             В современном русском образует более 100 глагольных и именных дериватов. \
             Едва ли не каждое действие можно описать глаголом на еб-.",
@@ -29,6 +31,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::B,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Женский корень мата. Образует два семантических ряда: \
             'говорить ерунду' (пиздеть, класс -е-) и 'бить/красть' (пиздить, класс -и-). \
             Один из немногих корней с двумя продуктивными глагольными классами.",
@@ -42,6 +46,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::C,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Ключевой именной корень русского мата. Этимология спорна: \
             от праиндоевропейского *ks-u- (хвоя), монгольского khui, или латинского huic. \
             Первый том словаря Плуцера-Сарно (500+ стр.) посвящён исключительно этому корню.",
@@ -55,6 +61,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "От древнерусского блѧдь — 'обман, ерунда, прелюбодейка'. \
             Преимущественно именной корень (блядь, блядский, блядство). \
             Глагольные формы (блядовать) используют суффикс -ова-, не включённый \
@@ -69,6 +77,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Корень со значением 'testiculi'. В современном русском \
             глагольные формы (мудить) означают 'медлить, заниматься ерундой'. \
             Преимущественно именной: мудак, мудило.",
@@ -82,6 +92,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::D,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Архаичный корень со значением 'женские гениталии'. \
             В XIX веке — одно из сильнейших ругательств. К XXI веку практически \
             утратил обсценную силу. Глагольные формы (мандить) крайне редки.",
@@ -95,6 +107,8 @@ pub const GROUP_1: &[RootData] = &[
         domain: Domain::Nuclear,
         productivity: ProductivityClass::E,
         present_stem: None,
+        takes_fill_vowel: false,
+        o_takes_ob: false,
         linguistic_note: "Архаичный корень со значением 'мужской член'. \
             Как и манд-, практически утратил обсценную силу в современном языке. \
             Глагольные формы (елдить) маргинальны.",
