@@ -1,0 +1,61 @@
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch: {}
+name: release
+
+jobs:
+  # Guarantee the GitHub Release exists (create-if-absent) so a re-dispatch on an
+  # already-released tag is a no-op rather than a failure. Uses the runner's built-in
+  # gh CLI — no dependency on a third action's create-if-exists semantics.
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create release if it does not exist
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes || true
+
+  # Build one binary per target and attach the archive (+ sha256) to the release.
+  upload:
+    needs: create-release
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+      # musl leg only: musl-gcc is the linker the fully-static musl target needs.
+      # matcraft has no C dependencies (only clap + rand), so the target plus
+      # musl-tools is sufficient — no cross/Docker.
+      - name: Install musl tools
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: matcraft
+          target: ${{ matrix.target }}
+          archive: $bin-$tag-$target
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
