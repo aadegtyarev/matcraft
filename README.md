@@ -13,8 +13,49 @@ possible). Никакого AI, никаких словарей — чистая
 
 ## Установка
 
+`matcraft` пока не публикуется в crates.io — установка выполняется из исходников.
+
+### 1. Установить Rust и cargo
+
+Если Rust ещё не установлен, поставьте его через rustup:
+
 ```sh
-cargo install matcraft
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+После установки перезапустите шелл или подтяните окружение в текущей сессии:
+
+```sh
+source "$HOME/.cargo/env"
+```
+
+Проверьте, что cargo доступен:
+
+```sh
+cargo --version
+```
+
+Требуется Rust ≥ 1.85 (edition 2024) — rustup ставит актуальную stable, этого достаточно.
+
+### 2. Клонировать репозиторий
+
+```sh
+git clone https://github.com/aadegtyarev/matcraft.git
+cd matcraft
+```
+
+### 3. Установить бинарник
+
+```sh
+cargo install --path .
+```
+
+Бинарник ставится в `~/.cargo/bin`, который уже добавлен в `PATH` после установки rustup.
+
+### 4. Проверить запуск
+
+```sh
+matcraft random
 ```
 
 ## Использование
@@ -181,4 +222,4 @@ MIT
 
 ## Где получить помощь
 
-[GitHub Issues](https://github.com/adegtyarev/matcraft/issues)
+[GitHub Issues](https://github.com/aadegtyarev/matcraft/issues)
